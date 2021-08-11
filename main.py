@@ -1,7 +1,8 @@
-from enum import Enum
 import pygame
 from pygame.locals import *
 import time
+
+from structs import Direction, Encodings, Result
 
 BOARD_SIZE = (22, 15)
 BLOCK_SIZE = 30
@@ -9,33 +10,11 @@ INTERVAL = 0.07
 BACKGROUND_COLOR = (44, 41, 87)
 
 
-class Direction(Enum):
-    UP = 'up'
-    DOWN = 'down'
-    LEFT = 'left'
-    RIGHT = 'right'
-
-
 PLAYER_KEYS = {K_UP: Direction.UP.value, K_DOWN: Direction.DOWN.value,
                K_LEFT: Direction.LEFT.value, K_RIGHT: Direction.RIGHT.value}
 
 ENEMY_KEYS = {K_w: Direction.UP.value, K_s: Direction.DOWN.value,
               K_a: Direction.LEFT.value, K_d: Direction.RIGHT.value}
-
-
-class GAME_RESULT(Enum):
-    WIN = 'win'
-    LOSE = 'lose'
-    DRAW = 'draw'
-    UNKNOWN = 'unknown'
-
-
-class ENCODINGS(Enum):
-    WALL_HIT = 3
-    PLAYER_HEAD = 10
-    PLAYER_BODY = 1
-    ENEMY_HEAD = 20
-    ENEMY_BODY = 2
 
 
 def pos_to_indexes(position):
@@ -144,14 +123,14 @@ class Game:
         self.reset()
 
     def reset(self):
-        self.status = GAME_RESULT.UNKNOWN
+        self.status = Result.UNKNOWN
 
         self.state = []
         (size_x, size_y) = self.screen_size
         for i in range(size_x // BLOCK_SIZE):
             self.state.append([])
             for j in range(size_y // BLOCK_SIZE):
-                self.state[i].append(0)
+                self.state[i].append(Encodings.EMPTY.value)
 
         # Initializing the player
         player_pos = (size_x / 4, size_y - BLOCK_SIZE)
@@ -161,10 +140,10 @@ class Game:
         self.enemy = Player(enemy_pos, self.screen_size)
 
         (player_x, player_y) = pos_to_indexes(self.player.head())
-        self.state[player_x][player_y] = ENCODINGS.PLAYER_HEAD.value
+        self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
 
         (enemy_x, enemy_y) = pos_to_indexes(self.enemy.head())
-        self.state[enemy_x][enemy_y] = ENCODINGS.ENEMY_HEAD.value
+        self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
 
         if (self.ui):
             self.surface.fill(BACKGROUND_COLOR)
@@ -176,22 +155,22 @@ class Game:
         (x, y) = pos_to_indexes(self.player.head())
 
         if self.player.collision_with_wall():
-            self.state[prev_x][prev_y] += ENCODINGS.WALL_HIT.value
+            self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
         else:
-            self.state[prev_x][prev_y] += (ENCODINGS.PLAYER_BODY.value -
-                                           ENCODINGS.PLAYER_HEAD.value)
-            self.state[x][y] += ENCODINGS.PLAYER_HEAD.value
+            self.state[prev_x][prev_y] += (Encodings.PLAYER_BODY.value -
+                                           Encodings.PLAYER_HEAD.value)
+            self.state[x][y] += Encodings.PLAYER_HEAD.value
 
         # Enemy
         (prev_x, prev_y) = pos_to_indexes(self.enemy.prev_head())
         (x, y) = pos_to_indexes(self.enemy.head())
 
         if self.enemy.collision_with_wall():
-            self.state[prev_x][prev_y] += ENCODINGS.WALL_HIT.value
+            self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
         else:
-            self.state[prev_x][prev_y] += (ENCODINGS.ENEMY_BODY.value -
-                                           ENCODINGS.ENEMY_HEAD.value)
-            self.state[x][y] += ENCODINGS.ENEMY_HEAD.value
+            self.state[prev_x][prev_y] += (Encodings.ENEMY_BODY.value -
+                                           Encodings.ENEMY_HEAD.value)
+            self.state[x][y] += Encodings.ENEMY_HEAD.value
 
     def __print_state(self):
         state_string = ""
@@ -207,11 +186,11 @@ class Game:
         has_enemy_lost = self.enemy.collision(self.player.x, self.player.y)
 
         if has_player_lost and has_enemy_lost:
-            self.status = GAME_RESULT.DRAW
+            self.status = Result.DRAW
         elif has_player_lost:
-            self.status = GAME_RESULT.LOSE
+            self.status = Result.LOSE
         elif has_enemy_lost:
-            self.status = GAME_RESULT.WIN
+            self.status = Result.WIN
 
     def display_result(self):
         font = pygame.font.SysFont('arial', 30)
@@ -236,7 +215,7 @@ class Game:
 
     def step(self, action, enemy_action='up'):
         # enemy_action = self.enemy_logic.action(self.state)
-        if self.status == GAME_RESULT.UNKNOWN:
+        if self.status == Result.UNKNOWN:
             self.player.move(action)
             self.enemy.move(enemy_action)
             self.player.progress()
@@ -247,12 +226,12 @@ class Game:
 
             if (self.ui):
                 self.update_ui()
-                if self.status != GAME_RESULT.UNKNOWN:
+                if self.status != Result.UNKNOWN:
                     self.display_result()
 
             time.sleep(self.update_interval)
 
-        return (self.state, self.status != GAME_RESULT.UNKNOWN, self.status)
+        return (self.state, self.status != Result.UNKNOWN, self.status)
 
     def run(self):
         running = True
