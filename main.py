@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import time
 
+from enemy import EnemyLogic
 from structs import Direction, Encodings, Result
 
 BOARD_SIZE = (22, 15)
@@ -105,11 +106,10 @@ class Player:
 
 
 class Game:
-    def __init__(self, enemy_logic, update_interval=INTERVAL, board_size=BOARD_SIZE, player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True):
+    def __init__(self, update_interval=INTERVAL, board_size=BOARD_SIZE, player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True):
         self.update_interval = update_interval
         self.screen_size = (
             board_size[0] * BLOCK_SIZE, board_size[1] * BLOCK_SIZE)
-        self.enemy_logic = enemy_logic
         self.player_keys = player_keys
         self.enemy_keys = enemy_keys
         self.ui = ui
@@ -214,7 +214,6 @@ class Game:
         pygame.display.flip()
 
     def step(self, action, enemy_action='up'):
-        # enemy_action = self.enemy_logic.action(self.state)
         if self.status == Result.UNKNOWN:
             self.player.move(action)
             self.enemy.move(enemy_action)
@@ -256,7 +255,29 @@ class Game:
 
             self.step(player_action, enemy_action)
 
+    def run_against_enemy(self, enemy_logic):
+        running = True
+
+        while running:
+            player_action = None
+
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        running = False
+                    elif event.key in self.player_keys:
+                        player_action = self.player_keys[event.key]
+                    elif event.key == K_r:
+                        self.reset()
+
+                elif event.type == QUIT:
+                    running = False
+
+            if self.result == Result.UNKNOWN:
+                self.step(player_action,
+                          enemy_logic.action(pos_to_indexes(self.enemy.head()), self.state))
+
 
 if __name__ == "__main__":
-    game = Game(None)
-    game.run()
+    game = Game()
+    game.run_against_enemy(EnemyLogic)
