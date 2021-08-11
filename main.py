@@ -3,7 +3,7 @@ import pygame
 from pygame.locals import *
 import time
 
-BOARD_SIZE = (660, 450)
+BOARD_SIZE = (22, 15)
 BLOCK_SIZE = 30
 INTERVAL = 0.07
 BACKGROUND_COLOR = (44, 41, 87)
@@ -128,7 +128,8 @@ class Player:
 class Game:
     def __init__(self, enemy_logic, update_interval=INTERVAL, board_size=BOARD_SIZE, player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True):
         self.update_interval = update_interval
-        self.board_size = board_size
+        self.screen_size = (
+            board_size[0] * BLOCK_SIZE, board_size[1] * BLOCK_SIZE)
         self.enemy_logic = enemy_logic
         self.player_keys = player_keys
         self.enemy_keys = enemy_keys
@@ -136,7 +137,7 @@ class Game:
 
         if (self.ui):
             pygame.init()
-            self.surface = pygame.display.set_mode(board_size)
+            self.surface = pygame.display.set_mode(self.screen_size)
             self.player_block = pygame.image.load("assets/blue.png").convert()
             self.enemy_block = pygame.image.load("assets/yellow.png").convert()
 
@@ -146,7 +147,7 @@ class Game:
         self.status = GAME_RESULT.UNKNOWN
 
         self.state = []
-        (size_x, size_y) = self.board_size
+        (size_x, size_y) = self.screen_size
         for i in range(size_x // BLOCK_SIZE):
             self.state.append([])
             for j in range(size_y // BLOCK_SIZE):
@@ -154,10 +155,10 @@ class Game:
 
         # Initializing the player
         player_pos = (size_x / 4, size_y - BLOCK_SIZE)
-        self.player = Player(player_pos, self.board_size)
+        self.player = Player(player_pos, self.screen_size)
         # Initializing the enemy
         enemy_pos = (size_x / 4 * 3, size_y - BLOCK_SIZE)
-        self.enemy = Player(enemy_pos, self.board_size)
+        self.enemy = Player(enemy_pos, self.screen_size)
 
         (player_x, player_y) = pos_to_indexes(self.player.head())
         self.state[player_x][player_y] = ENCODINGS.PLAYER_HEAD.value
