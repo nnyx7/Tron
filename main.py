@@ -260,20 +260,19 @@ class Game:
             player_action = None
             enemy_action = None
 
-            if (self.ui):
-                for event in pygame.event.get():
-                    if event.type == KEYDOWN:
-                        if event.key == K_ESCAPE:
-                            running = False
-                        elif event.key in self.player_keys:
-                            player_action = self.player_keys[event.key]
-                        elif event.key in self.enemy_keys:
-                            enemy_action = self.enemy_keys[event.key]
-                        elif event.key == K_r:
-                            self.reset()
-
-                    elif event.type == QUIT:
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
                         running = False
+                    elif event.key in self.player_keys:
+                        player_action = self.player_keys[event.key]
+                    elif event.key in self.enemy_keys:
+                        enemy_action = self.enemy_keys[event.key]
+                    elif event.key == K_r:
+                        self.reset()
+
+                elif event.type == QUIT:
+                    running = False
 
             self.step(player_action, enemy_action)
 
