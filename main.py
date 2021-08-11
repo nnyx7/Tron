@@ -43,19 +43,13 @@ def pos_to_indexes(position):
 
 
 class Player:
-    def __init__(self, screen, asset_file, init_coordinates, keys):
-        self.screen = screen
-        self.block = pygame.image.load(asset_file).convert()
+    def __init__(self, init_coordinates, board_size, keys):
         self.length = 1
         self.x = [init_coordinates[0]]
         self.y = [init_coordinates[1]]
-        self.direction = Direction.UP
+        self.board_size = board_size
         self.keys = keys
-
-    def draw(self):
-        for i in range(self.length):
-            self.screen.blit(self.block, (self.x[i], self.y[i]))
-        pygame.display.flip()
+        self.direction = Direction.UP
 
     def move_up(self):
         if (self.direction != Direction.DOWN):
@@ -101,8 +95,6 @@ class Player:
 
         self.length += 1
 
-        self.draw()
-
     def head(self):
         return (self.x[self.length - 1], self.y[self.length - 1])
 
@@ -112,7 +104,7 @@ class Player:
 
     def collision_with_wall(self):
         (head_x, head_y) = self.head()
-        (screen_x, screen_y) = self.screen.get_size()
+        (screen_x, screen_y) = self.board_size
         return (head_x < 0 or head_x > (
             screen_x - BLOCK_SIZE) or head_y < 0 or head_y > (screen_y - BLOCK_SIZE))
 
@@ -135,46 +127,48 @@ class Player:
 
 
 class Game:
-    def __init__(self, enemy_logic, update_interval=INTERVAL, board_size=BOARD_SIZE, player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS):
+    def __init__(self, enemy_logic, update_interval=INTERVAL, board_size=BOARD_SIZE, player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True):
         self.update_interval = update_interval
+        self.board_size = board_size
         self.enemy_logic = enemy_logic
         self.player_keys = player_keys
         self.enemy_keys = enemy_keys
+        self.ui = ui
 
-        pygame.init()
-        self.surface = pygame.display.set_mode(board_size)
+        if (self.ui):
+            pygame.init()
+            self.surface = pygame.display.set_mode(board_size)
+            self.player_block = pygame.image.load("assets/blue.png").convert()
+            self.enemy_block = pygame.image.load("assets/yellow.png").convert()
 
         self.reset()
 
     def reset(self):
-        self.surface.fill(BACKGROUND_COLOR)
-
         self.status = GAME_RESULT.UNKNOWN
 
         self.state = []
-        (size_x, size_y) = self.surface.get_size()
+        (size_x, size_y) = self.board_size
         for i in range(size_x // BLOCK_SIZE):
             self.state.append([])
             for j in range(size_y // BLOCK_SIZE):
                 self.state[i].append(0)
 
         # Initializing the player
-        player_coordinates = (size_x / 4, size_y - BLOCK_SIZE)
-        self.player = Player(
-            self.surface, "assets/blue.png", player_coordinates, self.player_keys)
+        player_pos = (size_x / 4, size_y - BLOCK_SIZE)
+        self.player = Player(player_pos, self.board_size, self.player_keys)
         # Initializing the enemy
-        enemy_coordinates = (size_x / 4 * 3, size_y - BLOCK_SIZE)
-        self.enemy = Player(
-            self.surface, "assets/yellow.png", enemy_coordinates, self.enemy_keys)
-
-        self.player.draw()
-        self.enemy.draw()
+        enemy_pos = (size_x / 4 * 3, size_y - BLOCK_SIZE)
+        self.enemy = Player(enemy_pos, self.board_size, self.enemy_keys)
 
         (player_x, player_y) = pos_to_indexes(self.player.head())
         self.state[player_x][player_y] = ENCODINGS.PLAYER_HEAD.value
 
         (enemy_x, enemy_y) = pos_to_indexes(self.enemy.head())
         self.state[enemy_x][enemy_y] = ENCODINGS.ENEMY_HEAD.value
+
+        if (self.ui):
+            self.surface.fill(BACKGROUND_COLOR)
+            self.update_ui()
 
     def update_state(self):
         # Player
@@ -229,6 +223,17 @@ class Game:
         self.surface.blit(result, (x, y))
         pygame.display.flip()
 
+    def update_ui(self):
+        # Draw player
+        for i in range(self.player.length):
+            self.surface.blit(self.player_block,
+                              (self.player.x[i], self.player.y[i]))
+        # Draw enemy
+        for i in range(self.enemy.length):
+            self.surface.blit(self.enemy_block,
+                              (self.enemy.x[i], self.enemy.y[i]))
+        pygame.display.flip()
+
     def run(self):
         running = True
 
@@ -236,19 +241,20 @@ class Game:
             last_player_key = None
             last_enemy_key = None
 
-            for event in pygame.event.get():
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        running = False
-                    elif event.key in self.player_keys.values():
-                        last_player_key = event.key
-                    elif event.key in self.enemy_keys.values():
-                        last_enemy_key = event.key
-                    elif event.key == K_r:
-                        self.reset()
+            if (self.ui):
+                for event in pygame.event.get():
+                    if event.type == KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            running = False
+                        elif event.key in self.player_keys.values():
+                            last_player_key = event.key
+                        elif event.key in self.enemy_keys.values():
+                            last_enemy_key = event.key
+                        elif event.key == K_r:
+                            self.reset()
 
-                elif event.type == QUIT:
-                    running = False
+                    elif event.type == QUIT:
+                        running = False
 
             self.player.move_on_key(last_player_key)
             self.enemy.move_on_key(last_enemy_key)
@@ -258,8 +264,11 @@ class Game:
                 self.enemy.progress()
                 self.update_state()
                 self.update_result()
-                if self.status != GAME_RESULT.UNKNOWN:
-                    self.display_result()
+
+                if (self.ui):
+                    self.update_ui()
+                    if self.status != GAME_RESULT.UNKNOWN:
+                        self.display_result()
 
                 time.sleep(self.update_interval)
 
