@@ -123,7 +123,7 @@ class Game:
         self.reset()
 
     def reset(self):
-        self.status = Result.UNKNOWN
+        self.result = Result.UNKNOWN
 
         self.state = []
         (size_x, size_y) = self.screen_size
@@ -186,15 +186,15 @@ class Game:
         has_enemy_lost = self.enemy.collision(self.player.x, self.player.y)
 
         if has_player_lost and has_enemy_lost:
-            self.status = Result.DRAW
+            self.result = Result.DRAW
         elif has_player_lost:
-            self.status = Result.LOSE
+            self.result = Result.LOSE
         elif has_enemy_lost:
-            self.status = Result.WIN
+            self.result = Result.WIN
 
     def display_result(self):
         font = pygame.font.SysFont('arial', 30)
-        result = font.render(self.status.value, True, (255, 255, 255))
+        result = font.render(self.result.value, True, (255, 255, 255))
 
         x = (self.surface.get_width() - result.get_width()) // 2
         y = (self.surface.get_height() - result.get_height()) // 2
@@ -214,7 +214,7 @@ class Game:
         pygame.display.flip()
 
     def step(self, action, enemy_action='up'):
-        if self.status == Result.UNKNOWN:
+        if self.result == Result.UNKNOWN:
             self.player.move(action)
             self.enemy.move(enemy_action)
             self.player.progress()
@@ -225,12 +225,12 @@ class Game:
 
             if (self.ui):
                 self.update_ui()
-                if self.status != Result.UNKNOWN:
+                if self.result != Result.UNKNOWN:
                     self.display_result()
 
             time.sleep(self.update_interval)
 
-        return (self.state, self.status != Result.UNKNOWN, self.status)
+        return (self.state, self.result != Result.UNKNOWN, self.result)
 
     def run(self):
         running = True
