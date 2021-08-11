@@ -233,6 +233,26 @@ class Game:
                               (self.enemy.x[i], self.enemy.y[i]))
         pygame.display.flip()
 
+    def step(self, action, enemy_action='up'):
+        # enemy_action = self.enemy_logic.action(self.state)
+        if self.status == GAME_RESULT.UNKNOWN:
+            self.player.move(action)
+            self.enemy.move(enemy_action)
+            self.player.progress()
+            self.enemy.progress()
+
+            self.update_state()
+            self.update_result()
+
+            if (self.ui):
+                self.update_ui()
+                if self.status != GAME_RESULT.UNKNOWN:
+                    self.display_result()
+
+            time.sleep(self.update_interval)
+
+        return (self.state, self.status != GAME_RESULT.UNKNOWN, self.status)
+
     def run(self):
         running = True
 
@@ -255,21 +275,7 @@ class Game:
                     elif event.type == QUIT:
                         running = False
 
-            self.player.move(player_action)
-            self.enemy.move(enemy_action)
-
-            if self.status == GAME_RESULT.UNKNOWN:
-                self.player.progress()
-                self.enemy.progress()
-                self.update_state()
-                self.update_result()
-
-                if (self.ui):
-                    self.update_ui()
-                    if self.status != GAME_RESULT.UNKNOWN:
-                        self.display_result()
-
-                time.sleep(self.update_interval)
+            self.step(player_action, enemy_action)
 
 
 if __name__ == "__main__":
