@@ -16,11 +16,11 @@ class Direction(Enum):
     RIGHT = 'right'
 
 
-PLAYER_KEYS = {Direction.UP.value: K_UP, Direction.DOWN.value: K_DOWN,
-               Direction.LEFT.value: K_LEFT, Direction.RIGHT.value: K_RIGHT}
+PLAYER_KEYS = {K_UP: Direction.UP.value, K_DOWN: Direction.DOWN.value,
+               K_LEFT: Direction.LEFT.value, K_RIGHT: Direction.RIGHT.value}
 
-ENEMY_KEYS = {Direction.UP.value: K_w, Direction.DOWN.value: K_s,
-              Direction.LEFT.value: K_a, Direction.RIGHT.value: K_d}
+ENEMY_KEYS = {K_w: Direction.UP.value, K_s: Direction.DOWN.value,
+              K_a: Direction.LEFT.value, K_d: Direction.RIGHT.value}
 
 
 class GAME_RESULT(Enum):
@@ -43,12 +43,11 @@ def pos_to_indexes(position):
 
 
 class Player:
-    def __init__(self, init_coordinates, board_size, keys):
+    def __init__(self, init_coordinates, board_size):
         self.length = 1
         self.x = [init_coordinates[0]]
         self.y = [init_coordinates[1]]
         self.board_size = board_size
-        self.keys = keys
         self.direction = Direction.UP
 
     def move_up(self):
@@ -67,14 +66,14 @@ class Player:
         if (self.direction != Direction.LEFT):
             self.direction = Direction.RIGHT
 
-    def move_on_key(self, key):
-        if key == self.keys[Direction.UP.value]:
+    def move(self, action):
+        if action == Direction.UP.value:
             self.move_up()
-        elif key == self.keys[Direction.DOWN.value]:
+        elif action == Direction.DOWN.value:
             self.move_down()
-        elif key == self.keys[Direction.LEFT.value]:
+        elif action == Direction.LEFT.value:
             self.move_left()
-        elif key == self.keys[Direction.RIGHT.value]:
+        elif action == Direction.RIGHT.value:
             self.move_right()
 
     def progress(self):
@@ -155,10 +154,10 @@ class Game:
 
         # Initializing the player
         player_pos = (size_x / 4, size_y - BLOCK_SIZE)
-        self.player = Player(player_pos, self.board_size, self.player_keys)
+        self.player = Player(player_pos, self.board_size)
         # Initializing the enemy
         enemy_pos = (size_x / 4 * 3, size_y - BLOCK_SIZE)
-        self.enemy = Player(enemy_pos, self.board_size, self.enemy_keys)
+        self.enemy = Player(enemy_pos, self.board_size)
 
         (player_x, player_y) = pos_to_indexes(self.player.head())
         self.state[player_x][player_y] = ENCODINGS.PLAYER_HEAD.value
@@ -238,26 +237,26 @@ class Game:
         running = True
 
         while running:
-            last_player_key = None
-            last_enemy_key = None
+            player_action = None
+            enemy_action = None
 
             if (self.ui):
                 for event in pygame.event.get():
                     if event.type == KEYDOWN:
                         if event.key == K_ESCAPE:
                             running = False
-                        elif event.key in self.player_keys.values():
-                            last_player_key = event.key
-                        elif event.key in self.enemy_keys.values():
-                            last_enemy_key = event.key
+                        elif event.key in self.player_keys:
+                            player_action = self.player_keys[event.key]
+                        elif event.key in self.enemy_keys:
+                            enemy_action = self.enemy_keys[event.key]
                         elif event.key == K_r:
                             self.reset()
 
                     elif event.type == QUIT:
                         running = False
 
-            self.player.move_on_key(last_player_key)
-            self.enemy.move_on_key(last_enemy_key)
+            self.player.move(player_action)
+            self.enemy.move(enemy_action)
 
             if self.status == GAME_RESULT.UNKNOWN:
                 self.player.progress()
