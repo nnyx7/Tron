@@ -5,7 +5,8 @@ import time
 from enemy import EnemyLogic
 from structs import Direction, Encodings, Result
 
-BOARD_SIZE = (22, 15)
+# Трябва размерите да се делят на 4, за да имат правилни координати блоковете
+BOARD_SIZE = (24, 16)
 BLOCK_SIZE = 30
 INTERVAL = 0.07
 BACKGROUND_COLOR = (44, 41, 87)
@@ -147,6 +148,15 @@ class Game:
 
         if (self.ui):
             self.surface.fill(BACKGROUND_COLOR)
+            # Vertical lines
+            for i in range(int(self.screen_size[0] // BLOCK_SIZE)):
+                pygame.draw.line(self.surface, (150, 150, 150), (i *
+                                 BLOCK_SIZE - 0.5,0), (i * BLOCK_SIZE, self.screen_size[1]))
+            # Horizontal lines
+            for i in range(int(self.screen_size[1] // BLOCK_SIZE)):
+                pygame.draw.line(self.surface, (150, 150, 150), (0, i *
+                                 BLOCK_SIZE), (self.screen_size[0], i * BLOCK_SIZE))
+
             self.update_ui()
 
     def update_state(self):
