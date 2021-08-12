@@ -50,6 +50,6 @@ class EnemyLogic:
         min_value = min(values.values())
 
         best_actions = [
-            direction.value for direction in values if values[direction] == min_value]
+            direction for direction in values if values[direction] == min_value]
 
         return random.choice(best_actions)

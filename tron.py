@@ -12,11 +12,11 @@ INTERVAL = 0.07
 BACKGROUND_COLOR = (44, 41, 87)
 
 
-PLAYER_KEYS = {K_UP: Direction.UP.value, K_DOWN: Direction.DOWN.value,
-               K_LEFT: Direction.LEFT.value, K_RIGHT: Direction.RIGHT.value}
+PLAYER_KEYS = {K_UP: Direction.UP, K_DOWN: Direction.DOWN,
+               K_LEFT: Direction.LEFT, K_RIGHT: Direction.RIGHT}
 
-ENEMY_KEYS = {K_w: Direction.UP.value, K_s: Direction.DOWN.value,
-              K_a: Direction.LEFT.value, K_d: Direction.RIGHT.value}
+ENEMY_KEYS = {K_w: Direction.UP, K_s: Direction.DOWN,
+              K_a: Direction.LEFT, K_d: Direction.RIGHT}
 
 
 def pos_to_indexes(position):
@@ -48,13 +48,13 @@ class Player:
             self.direction = Direction.RIGHT
 
     def move(self, action):
-        if action == Direction.UP.value:
+        if action == Direction.UP:
             self.move_up()
-        elif action == Direction.DOWN.value:
+        elif action == Direction.DOWN:
             self.move_down()
-        elif action == Direction.LEFT.value:
+        elif action == Direction.LEFT:
             self.move_left()
-        elif action == Direction.RIGHT.value:
+        elif action == Direction.RIGHT:
             self.move_right()
 
     def progress(self):
@@ -114,8 +114,8 @@ class Game:
         self.player_keys = player_keys
         self.enemy_keys = enemy_keys
         self.ui = ui
-        self.actions = [Direction.UP.value, Direction.DOWN.value,
-                        Direction.LEFT.value, Direction.RIGHT.value]
+        self.actions = [Direction.UP, Direction.DOWN,
+                        Direction.LEFT, Direction.RIGHT]
 
         if (self.ui):
             pygame.init()
@@ -225,8 +225,13 @@ class Game:
                               (self.enemy.x[i], self.enemy.y[i]))
         pygame.display.flip()
 
-    def step(self, action, enemy_action='up'):
+    def step(self, action, enemy_action):
         if self.result == Result.UNKNOWN:
+            if isinstance(action, int):
+                action = self.actions[action]
+            if isinstance(enemy_action, int):
+                enemy_action = self.actions[enemy_action]
+
             self.player.move(action)
             self.enemy.move(enemy_action)
             self.player.progress()
