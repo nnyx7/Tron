@@ -159,9 +159,9 @@ class Game:
                 pygame.draw.line(self.surface, (150, 150, 150), (0, i *
                                  BLOCK_SIZE), (self.screen_size[0], i * BLOCK_SIZE))
 
-            self.update_ui()
+            self.__update_ui()
 
-    def update_state(self):
+    def __update_state(self):
         # Player
         (prev_x, prev_y) = pos_to_indexes(self.player.prev_head())
         (x, y) = pos_to_indexes(self.player.head())
@@ -184,16 +184,7 @@ class Game:
                                            Encodings.ENEMY_HEAD.value)
             self.state[x][y] += Encodings.ENEMY_HEAD.value
 
-    def __print_state(self):
-        state_string = ""
-        for j in range(len(self.state[0])):
-            for i in range(len(self.state)):
-                state_string += f'{self.state[i][j]} '
-            state_string += '\n'
-
-        print(state_string)
-
-    def update_result(self):
+    def __update_result(self):
         has_player_lost = self.player.collision(self.enemy.x, self.enemy.y)
         has_enemy_lost = self.enemy.collision(self.player.x, self.player.y)
 
@@ -204,7 +195,7 @@ class Game:
         elif has_enemy_lost:
             self.result = Result.WIN
 
-    def display_result(self):
+    def __display_result(self):
         font = pygame.font.SysFont('arial', 30)
         result = font.render(self.result.value, True, (255, 255, 255))
 
@@ -214,7 +205,7 @@ class Game:
         self.surface.blit(result, (x, y))
         pygame.display.flip()
 
-    def update_ui(self):
+    def __update_ui(self):
         # Draw player
         for i in range(self.player.length):
             self.surface.blit(self.player_block,
@@ -224,6 +215,15 @@ class Game:
             self.surface.blit(self.enemy_block,
                               (self.enemy.x[i], self.enemy.y[i]))
         pygame.display.flip()
+
+    def print_state(self):
+        state_string = ""
+        for j in range(len(self.state[0])):
+            for i in range(len(self.state)):
+                state_string += f'{self.state[i][j]} '
+            state_string += '\n'
+
+        print(state_string)
 
     def step(self, action, enemy_action):
         if self.result == Result.UNKNOWN:
@@ -237,13 +237,13 @@ class Game:
             self.player.progress()
             self.enemy.progress()
 
-            self.update_state()
-            self.update_result()
+            self.__update_state()
+            self.__update_result()
 
             if (self.ui):
-                self.update_ui()
+                self.__update_ui()
                 if self.result != Result.UNKNOWN:
-                    self.display_result()
+                    self.__display_result()
 
             time.sleep(self.update_interval)
 
