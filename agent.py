@@ -20,7 +20,7 @@ class Agent:
         self.target_model.set_weights(self.model.get_weights())
 
     def __explore(self):
-        return random.choice(self.num_actions)
+        return random.randrange(self.num_actions)
 
     def __exploit(self, state):
         state_tensor = tf.convert_to_tensor(state)
