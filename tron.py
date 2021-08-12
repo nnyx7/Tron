@@ -262,7 +262,7 @@ class Game:
             if wait:
                 time.sleep(self.update_interval)
 
-        return (self.state, self.result != Result.UNKNOWN, self.result)
+        return (self.state, self.result != Result.UNKNOWN, self.result.value)
 
     def run(self):
         running = True
@@ -287,7 +287,7 @@ class Game:
 
             self.step(player_action, enemy_action, wait=True)
 
-    def run_against_enemy(self, enemy_logic):
+    def run_against_enemy(self, enemy):
         running = True
 
         while running:
@@ -306,8 +306,7 @@ class Game:
                     running = False
 
             if self.result == Result.UNKNOWN:
-                self.step(player_action, enemy_logic.action(
-                    self.state), wait=True)
+                self.step(player_action, enemy.action(self.state), wait=True)
 
 
 if __name__ == "__main__":
