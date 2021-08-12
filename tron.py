@@ -114,6 +114,8 @@ class Game:
         self.player_keys = player_keys
         self.enemy_keys = enemy_keys
         self.ui = ui
+        self.actions = [Direction.UP.value, Direction.DOWN.value,
+                        Direction.LEFT.value, Direction.RIGHT.value]
 
         if (self.ui):
             pygame.init()
@@ -134,10 +136,10 @@ class Game:
                 self.state[i].append(Encodings.EMPTY.value)
 
         # Initializing the player
-        player_pos = (size_x / 4, size_y - BLOCK_SIZE)
+        player_pos = (size_x // 4, size_y - BLOCK_SIZE)
         self.player = Player(player_pos, self.screen_size)
         # Initializing the enemy
-        enemy_pos = (size_x / 4 * 3, size_y - BLOCK_SIZE)
+        enemy_pos = (size_x // 4 * 3, size_y - BLOCK_SIZE)
         self.enemy = Player(enemy_pos, self.screen_size)
 
         (player_x, player_y) = pos_to_indexes(self.player.head())
@@ -151,7 +153,7 @@ class Game:
             # Vertical lines
             for i in range(int(self.screen_size[0] // BLOCK_SIZE)):
                 pygame.draw.line(self.surface, (150, 150, 150), (i *
-                                 BLOCK_SIZE - 0.5,0), (i * BLOCK_SIZE, self.screen_size[1]))
+                                 BLOCK_SIZE, 0), (i * BLOCK_SIZE, self.screen_size[1]))
             # Horizontal lines
             for i in range(int(self.screen_size[1] // BLOCK_SIZE)):
                 pygame.draw.line(self.surface, (150, 150, 150), (0, i *
