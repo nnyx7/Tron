@@ -3,8 +3,11 @@ from structs import Direction, Encodings
 
 
 class EnemyLogic:
-    def action(head, state):
-        (x, y) = head
+    def __init__(self, enemy):
+        self.enemy = enemy
+
+    def action(self, state):
+        (x, y) = self.enemy.head_indexes()
         max_x = len(state) - 1
         max_y = len(state[0]) - 1
 

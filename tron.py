@@ -19,7 +19,7 @@ ENEMY_KEYS = {K_w: Direction.UP, K_s: Direction.DOWN,
               K_a: Direction.LEFT, K_d: Direction.RIGHT}
 
 
-def pos_to_indexes(position):
+def as_indexes(position):
     return (int(position[0] // BLOCK_SIZE), int(position[1] // BLOCK_SIZE))
 
 
@@ -78,9 +78,15 @@ class Player:
     def head(self):
         return (self.x[self.length - 1], self.y[self.length - 1])
 
+    def head_indexes(self):
+        return as_indexes(self.head())
+
     def prev_head(self):
         prev_index = self.length - 2
         return (self.x[prev_index], self.y[prev_index])
+
+    def prev_head_indexes(self):
+        return as_indexes(self.prev_head())
 
     def collision_with_wall(self):
         (head_x, head_y) = self.head()
@@ -142,10 +148,10 @@ class Game:
         enemy_pos = (size_x // 4 * 3, size_y - BLOCK_SIZE)
         self.enemy = Player(enemy_pos, self.screen_size)
 
-        (player_x, player_y) = pos_to_indexes(self.player.head())
+        (player_x, player_y) = self.player.head_indexes()
         self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
 
-        (enemy_x, enemy_y) = pos_to_indexes(self.enemy.head())
+        (enemy_x, enemy_y) = self.enemy.head_indexes()
         self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
 
         if (self.ui):
@@ -163,8 +169,8 @@ class Game:
 
     def __update_state(self):
         # Player
-        (prev_x, prev_y) = pos_to_indexes(self.player.prev_head())
-        (x, y) = pos_to_indexes(self.player.head())
+        (prev_x, prev_y) = self.player.prev_head_indexes()
+        (x, y) = self.player.head_indexes()
 
         if self.player.collision_with_wall():
             self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
@@ -174,8 +180,8 @@ class Game:
             self.state[x][y] += Encodings.PLAYER_HEAD.value
 
         # Enemy
-        (prev_x, prev_y) = pos_to_indexes(self.enemy.prev_head())
-        (x, y) = pos_to_indexes(self.enemy.head())
+        (prev_x, prev_y) = self.enemy.prev_head_indexes()
+        (x, y) = self.enemy.head_indexes()
 
         if self.enemy.collision_with_wall():
             self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
@@ -291,8 +297,7 @@ class Game:
                     running = False
 
             if self.result == Result.UNKNOWN:
-                self.step(player_action,
-                          enemy_logic.action(pos_to_indexes(self.enemy.head()), self.state))
+                self.step(player_action, enemy_logic.action(self.state))
 
 
 if __name__ == "__main__":
