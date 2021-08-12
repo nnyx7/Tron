@@ -2,7 +2,7 @@ import random
 from structs import Direction, Encodings
 
 
-class EnemyLogic:
+class Enemy:
     def __init__(self, enemy):
         self.enemy = enemy
 

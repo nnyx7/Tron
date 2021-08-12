@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 import time
 
-from enemy import EnemyLogic
+from enemy import Enemy
 from structs import Direction, Encodings, Result
 
 # Трябва размерите да се делят на 4, за да имат правилни координати блоковете
@@ -302,4 +302,6 @@ class Game:
 
 if __name__ == "__main__":
     game = Game()
-    game.run_against_enemy(EnemyLogic)
+    enemy = Enemy(game.enemy)
+
+    game.run_against_enemy(enemy)
