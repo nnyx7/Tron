@@ -240,7 +240,7 @@ class Game:
 
         print(state_string)
 
-    def step(self, action, enemy_action):
+    def step(self, action, enemy_action, wait=False):
         if self.result == Result.UNKNOWN:
             if isinstance(action, int):
                 action = self.actions[action]
@@ -259,8 +259,8 @@ class Game:
                 self.__update_ui()
                 if self.result != Result.UNKNOWN:
                     self.__display_result()
-
-            time.sleep(self.update_interval)
+            if wait:
+                time.sleep(self.update_interval)
 
         return (self.state, self.result != Result.UNKNOWN, self.result)
 
@@ -285,7 +285,7 @@ class Game:
                 elif event.type == QUIT:
                     running = False
 
-            self.step(player_action, enemy_action)
+            self.step(player_action, enemy_action, wait=True)
 
     def run_against_enemy(self, enemy_logic):
         running = True
@@ -306,7 +306,8 @@ class Game:
                     running = False
 
             if self.result == Result.UNKNOWN:
-                self.step(player_action, enemy_logic.action(self.state))
+                self.step(player_action, enemy_logic.action(
+                    self.state), wait=True)
 
 
 if __name__ == "__main__":
