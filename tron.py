@@ -25,10 +25,15 @@ def as_indexes(position):
 
 class Player:
     def __init__(self, init_coordinates, board_size):
-        self.length = 1
-        self.x = [init_coordinates[0]]
-        self.y = [init_coordinates[1]]
+        self.init_coordinates = init_coordinates
         self.board_size = board_size
+
+        self.reset()
+
+    def reset(self):
+        self.length = 1
+        self.x = [self.init_coordinates[0]]
+        self.y = [self.init_coordinates[1]]
         self.direction = Direction.UP
 
     def move_up(self):
@@ -117,11 +122,20 @@ class Game:
         self.update_interval = update_interval
         self.screen_size = (
             board_size[0] * BLOCK_SIZE, board_size[1] * BLOCK_SIZE)
-        self.player_keys = player_keys
-        self.enemy_keys = enemy_keys
-        self.ui = ui
+
         self.actions = [Direction.UP, Direction.DOWN,
                         Direction.LEFT, Direction.RIGHT]
+
+        (x, y) = self.screen_size
+        player_pos = (x // 4, y - BLOCK_SIZE)
+        enemy_pos = (x // 4 * 3, y - BLOCK_SIZE)
+        self.player = Player(player_pos, self.screen_size)
+        self.enemy = Player(enemy_pos, self.screen_size)
+
+        self.player_keys = player_keys
+        self.enemy_keys = enemy_keys
+
+        self.ui = ui
 
         if (self.ui):
             pygame.init()
@@ -133,6 +147,8 @@ class Game:
 
     def reset(self):
         self.result = Result.UNKNOWN
+        self.player.reset()
+        self.enemy.reset()
 
         self.state = []
         (size_x, size_y) = self.screen_size
@@ -140,13 +156,6 @@ class Game:
             self.state.append([])
             for j in range(size_y // BLOCK_SIZE):
                 self.state[i].append(Encodings.EMPTY.value)
-
-        # Initializing the player
-        player_pos = (size_x // 4, size_y - BLOCK_SIZE)
-        self.player = Player(player_pos, self.screen_size)
-        # Initializing the enemy
-        enemy_pos = (size_x // 4 * 3, size_y - BLOCK_SIZE)
-        self.enemy = Player(enemy_pos, self.screen_size)
 
         (player_x, player_y) = self.player.head_indexes()
         self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
