@@ -27,6 +27,13 @@ class Game:
         self.actions = [Direction.UP, Direction.DOWN,
                         Direction.LEFT, Direction.RIGHT]
 
+        self.state = []
+        (size_x, size_y) = self.screen_size
+        for i in range(size_x // BLOCK_SIZE):
+            self.state.append([])
+            for j in range(size_y // BLOCK_SIZE):
+                self.state[i].append(Encodings.EMPTY.value)
+
         (x, y) = self.screen_size
         player_pos = (x // 4, y - BLOCK_SIZE)
         enemy_pos = (x // 4 * 3, y - BLOCK_SIZE)
@@ -55,12 +62,10 @@ class Game:
         self.player.reset()
         self.enemy.reset()
 
-        self.state = []
         (size_x, size_y) = self.screen_size
         for i in range(size_x // BLOCK_SIZE):
-            self.state.append([])
             for j in range(size_y // BLOCK_SIZE):
-                self.state[i].append(Encodings.EMPTY.value)
+                self.state[i][j] = Encodings.EMPTY.value
 
         (player_x, player_y) = self.player.head_indexes()
         self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
