@@ -1,16 +1,18 @@
 import pygame
 from pygame.locals import *
 import time
+import numpy as np
+import tensorflow as tf
 
 from enemy import Enemy
 from structs import Direction, Encodings, Result
 
 # Трябва размерите да се делят на 4, за да имат правилни координати блоковете
-BOARD_SIZE = (24, 16)
+BOARD_SIZE = (12, 12)
 BLOCK_SIZE = 30
 INTERVAL = 0.07
 BACKGROUND_COLOR = (44, 41, 87)
-
+MODEL_NAME = 'model.h5'
 
 PLAYER_KEYS = {K_UP: Direction.UP, K_DOWN: Direction.DOWN,
                K_LEFT: Direction.LEFT, K_RIGHT: Direction.RIGHT}
@@ -21,6 +23,14 @@ ENEMY_KEYS = {K_w: Direction.UP, K_s: Direction.DOWN,
 
 def as_indexes(position):
     return (int(position[0] // BLOCK_SIZE), int(position[1] // BLOCK_SIZE))
+
+
+def flatten(state):
+    flatten_state = []
+    for i in range(BOARD_SIZE[0]):
+        for j in range(BOARD_SIZE[1]):
+            flatten_state.append(state[i][j])
+    return flatten_state
 
 
 class Player:
@@ -138,12 +148,16 @@ class Game:
         self.ui = ui
 
         if (self.ui):
-            pygame.init()
-            self.surface = pygame.display.set_mode(self.screen_size)
-            self.player_block = pygame.image.load("assets/blue.png").convert()
-            self.enemy_block = pygame.image.load("assets/yellow.png").convert()
+            self.enable_ui()
 
         self.reset()
+
+    def enable_ui(self):
+        self.ui = True
+        pygame.init()
+        self.surface = pygame.display.set_mode(self.screen_size)
+        self.player_block = pygame.image.load("assets/blue.png").convert()
+        self.enemy_block = pygame.image.load("assets/yellow.png").convert()
 
     def reset(self):
         self.result = Result.UNKNOWN
@@ -308,9 +322,29 @@ class Game:
             if self.result == Result.UNKNOWN:
                 self.step(player_action, enemy.action(self.state), wait=True)
 
+    def run_agent_vs_enemy(self, agent, enemy):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        running = False
+                    elif event.key == K_r:
+                        self.reset()
+                elif event.type == QUIT:
+                    running = False
+
+            if self.result == Result.UNKNOWN:
+                agent_actions = agent(np.array([flatten(self.state)]))
+                agent_action = int(np.argmax(agent_actions))
+                enemy_action = enemy.action(self.state)
+                self.step(agent_action, enemy_action, wait=True)
+
 
 if __name__ == "__main__":
     game = Game()
-    enemy = Enemy(game.enemy)
 
-    game.run_against_enemy(enemy)
+    enemy = Enemy(game.enemy)
+    model = tf.keras.models.load_model(MODEL_NAME, compile=False)
+
+    game.run_agent_vs_enemy(model, enemy)
