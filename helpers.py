@@ -27,7 +27,7 @@ def disassemble(batch):
     return (np.array(states), np.array(actions), np.array(rewards), np.array(next_states))
 
 
-def grid(state, player_indexes, side_size):
+def flatten_grid(state, player_indexes, side_size):
     grid_state = []
     for i in range(side_size):
         grid_state.append([])
@@ -54,4 +54,4 @@ def grid(state, player_indexes, side_size):
 
         offset_x += 1
 
-    return grid_state
+    return flatten(grid_state, (side_size, side_size))
