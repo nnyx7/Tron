@@ -70,8 +70,8 @@ class Game:
         (player_x, player_y) = self.player.head_indexes()
         self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
 
-        (enemy_x, enemy_y) = self.enemy.head_indexes()
-        self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
+        # (enemy_x, enemy_y) = self.enemy.head_indexes()
+        # self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
 
         if (self.ui):
             self.surface.fill(BACKGROUND_COLOR)
@@ -99,15 +99,15 @@ class Game:
             self.state[x][y] += Encodings.PLAYER_HEAD.value
 
         # Enemy
-        (prev_x, prev_y) = self.enemy.prev_head_indexes()
-        (x, y) = self.enemy.head_indexes()
+        # (prev_x, prev_y) = self.enemy.prev_head_indexes()
+        # (x, y) = self.enemy.head_indexes()
 
-        if self.enemy.collision_with_wall():
-            self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
-        else:
-            self.state[prev_x][prev_y] += (Encodings.ENEMY_BODY.value -
-                                           Encodings.ENEMY_HEAD.value)
-            self.state[x][y] += Encodings.ENEMY_HEAD.value
+        # if self.enemy.collision_with_wall():
+        #     self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
+        # else:
+        #     self.state[prev_x][prev_y] += (Encodings.ENEMY_BODY.value -
+        #                                    Encodings.ENEMY_HEAD.value)
+        #     self.state[x][y] += Encodings.ENEMY_HEAD.value
 
     def __update_result(self):
         has_player_lost = self.player.collision(self.enemy.x, self.enemy.y)
@@ -136,9 +136,9 @@ class Game:
             self.surface.blit(self.player_block,
                               (self.player.x[i], self.player.y[i]))
         # Draw enemy
-        for i in range(self.enemy.length):
-            self.surface.blit(self.enemy_block,
-                              (self.enemy.x[i], self.enemy.y[i]))
+        # for i in range(self.enemy.length):
+        #     self.surface.blit(self.enemy_block,
+        #                       (self.enemy.x[i], self.enemy.y[i]))
         pygame.display.flip()
 
     def print_state(self):
