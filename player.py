@@ -16,7 +16,7 @@ class Player:
         self.length = 1
         # self.x = [self.init_coordinates[0]]
         # self.y = [self.init_coordinates[1]]
-        self.x = [random.randrange(self.board_size[0] // 30)* 30]
+        self.x = [random.randrange(self.board_size[0] // 30) * 30]
         self.y = [random.randrange(self.board_size[1] // 30) * 30]
 
         self.direction = Direction.UP
@@ -88,10 +88,10 @@ class Player:
         (head_x, head_y) = self.head()
 
         crashing_in_enemy = False
-        for i in range(len(enemy_x)):
-            if ((head_x, head_y) == (enemy_x[i], enemy_y[i])):
-                crashing_in_enemy = True
-                break
+        # for i in range(len(enemy_x)):
+        #     if ((head_x, head_y) == (enemy_x[i], enemy_y[i])):
+        #         crashing_in_enemy = True
+        #         break
 
         crashing_in_self = False
         for i in range(len(self.x) - 1):

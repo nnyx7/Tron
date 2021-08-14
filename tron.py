@@ -111,14 +111,16 @@ class Game:
 
     def __update_result(self):
         has_player_lost = self.player.collision(self.enemy.x, self.enemy.y)
-        has_enemy_lost = self.enemy.collision(self.player.x, self.player.y)
+        # has_enemy_lost = self.enemy.collision(self.player.x, self.player.y)
 
-        if has_player_lost and has_enemy_lost:
-            self.result = Result.DRAW
-        elif has_player_lost:
+        # if has_player_lost and has_enemy_lost:
+        #     self.result = Result.DRAW
+        # elif has_player_lost:
+        #     self.result = Result.LOSE
+        # elif has_enemy_lost:
+        #     self.result = Result.WIN
+        if has_player_lost:
             self.result = Result.LOSE
-        elif has_enemy_lost:
-            self.result = Result.WIN
 
     def __display_result(self):
         font = pygame.font.SysFont('arial', 30)
