@@ -7,12 +7,12 @@ def as_indexes(position, block_size):
     return (int(position[0] // block_size), int(position[1] // block_size))
 
 
-def flatten(state, board_size):
-    flatten_state = []
-    for i in range(board_size[0]):
-        for j in range(board_size[1]):
-            flatten_state.append(state[i][j])
-    return flatten_state
+# def flatten(state, board_size):
+#     flatten_state = []
+#     for i in range(board_size[0]):
+#         for j in range(board_size[1]):
+#           flatten_state.append(state[i][j])
+#     return flatten_state
 
 
 def disassemble(batch):
@@ -54,4 +54,4 @@ def flatten_grid(state, player_indexes, side_size):
 
         offset_x += 1
 
-    return flatten(grid_state, (side_size, side_size))
+    return np.array(grid_state).flatten()

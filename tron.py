@@ -92,11 +92,10 @@ class Game:
         (x, y) = self.player.head_indexes()
 
         if self.player.collision_with_wall():
-            self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
+            self.state[prev_x][prev_y] = Encodings.WALL_HIT.value
         else:
-            self.state[prev_x][prev_y] += (Encodings.PLAYER_BODY.value -
-                                           Encodings.PLAYER_HEAD.value)
-            self.state[x][y] += Encodings.PLAYER_HEAD.value
+            self.state[prev_x][prev_y] = Encodings.PLAYER_BODY.value
+            self.state[x][y] = Encodings.PLAYER_HEAD.value
 
         # Enemy
         # (prev_x, prev_y) = self.enemy.prev_head_indexes()
@@ -235,11 +234,11 @@ class Game:
             if self.result == Result.UNKNOWN:
                 grid_state = flatten_grid(
                     self.state, game.player.head_indexes(), 3)
-
-                agent_actions = agent(np.array([grid_state]))
+                agent_actions = agent(np.array([grid_state[:9]]))
                 agent_action = int(np.argmax(agent_actions))
                 enemy_action = enemy.action(self.state)
                 self.step(agent_action, enemy_action, wait=True)
+                self.print_state()
 
 
 if __name__ == "__main__":
