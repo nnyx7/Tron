@@ -17,7 +17,7 @@ class Player:
         # self.x = [self.init_coordinates[0]]
         # self.y = [self.init_coordinates[1]]
         self.x = [random.randrange(self.board_size[0] // 30) * 30]
-        self.y = [random.randrange(self.board_size[1] // 30) * 30]
+        self.y = [0]
 
         self.direction = Direction.UP
 
