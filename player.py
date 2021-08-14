@@ -1,3 +1,5 @@
+import random
+
 from constants import BLOCK_SIZE
 from helpers import as_indexes
 from structs import Direction
@@ -12,8 +14,11 @@ class Player:
 
     def reset(self):
         self.length = 1
-        self.x = [self.init_coordinates[0]]
-        self.y = [self.init_coordinates[1]]
+        # self.x = [self.init_coordinates[0]]
+        # self.y = [self.init_coordinates[1]]
+        self.x = [random.randrange(self.board_size[0] // 30)* 30]
+        self.y = [random.randrange(self.board_size[1] // 30) * 30]
+
         self.direction = Direction.UP
 
     def move_up(self):
