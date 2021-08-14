@@ -158,9 +158,9 @@ class Game:
                 enemy_action = self.actions[enemy_action]
 
             self.player.move(action)
-            self.enemy.move(enemy_action)
+            # self.enemy.move(enemy_action)
             self.player.progress()
-            self.enemy.progress()
+            # self.enemy.progress()
 
             self.__update_state()
             self.__update_result()
