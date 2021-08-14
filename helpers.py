@@ -34,7 +34,7 @@ def flatten_grid(state, player_indexes, side_size):
         for j in range(side_size):
             grid_state[i].append(Encodings.EMPTY.value)
 
-    board_size = len(state)
+    (board_x, board_y) = (len(state), len(state[0]))
     offset = int(-(side_size - 1) // 2)
 
     (x, y) = player_indexes
@@ -46,7 +46,7 @@ def flatten_grid(state, player_indexes, side_size):
         offset_y = offset
         for j in range(side_size):
             actual_y = y + offset_y
-            if (actual_x < 0 or actual_x >= board_size or actual_y < 0 or actual_y >= board_size):
+            if (actual_x < 0 or actual_x >= board_x or actual_y < 0 or actual_y >= board_y):
                 grid_state[i][j] = Encodings.WALL_HIT.value
             else:
                 grid_state[i][j] = state[actual_x][actual_y]
