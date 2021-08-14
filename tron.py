@@ -152,8 +152,9 @@ class Game:
         print(state_string)
 
     def step(self, action, enemy_action, wait=False):
+        action_int = int(action)
         if self.result == Result.UNKNOWN:
-            if isinstance(action, int):
+            if isinstance(action_int, int):
                 action = self.actions[action]
             if isinstance(enemy_action, int):
                 enemy_action = self.actions[enemy_action]
@@ -234,17 +235,36 @@ class Game:
             if self.result == Result.UNKNOWN:
                 grid_state = flatten_grid(
                     self.state, game.player.head_indexes(), 3)
-                agent_actions = agent(np.array([grid_state[:9]]))
+                agent_actions = agent(np.array([grid_state]))
+
+                if self.player.direction == Direction.UP:
+                    mask = np.array([[True, False, True, True]])
+                    agent_actions = tf.boolean_mask(agent_actions, mask)
+                elif self.player.direction == Direction.DOWN:
+                    mask = np.array([[False, True, True, True]])
+                    agent_actions = tf.boolean_mask(agent_actions, mask)
+                elif self.player.direction == Direction.LEFT:
+                    mask = np.array([[True, True, True, False]])
+                    agent_actions = tf.boolean_mask(agent_actions, mask)
+                elif self.player.direction == Direction.RIGHT:
+                    mask = np.array([[True, True, False, True]])
+                    agent_actions = tf.boolean_mask(agent_actions, mask)
+
+                print(f'agent actions {agent_actions}')
+
                 agent_action = int(np.argmax(agent_actions))
                 enemy_action = enemy.action(self.state)
+                agent_action = np.array([0, 1, 2, 3])[mask[0]][agent_action]
+                print(f'agent action: {agent_action}')
                 self.step(agent_action, enemy_action, wait=True)
-                self.print_state()
+                grid_state = flatten_grid(
+                    self.state, game.player.head_indexes(), 3)
 
 
 if __name__ == "__main__":
     game = Game()
 
     enemy = Enemy(game.enemy)
-    model = tf.keras.models.load_model('model.h5', compile=False)
+    model = tf.keras.models.load_model('model_105.h5', compile=False)
 
     game.run_agent_vs_enemy(model, enemy)
