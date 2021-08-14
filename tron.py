@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from constants import *
 from enemy import Enemy
-from helpers import flatten
+from helpers import flatten_grid
 from player import Player
 from structs import Direction, Encodings, Result
 
@@ -35,8 +35,8 @@ class Game:
                 self.state[i].append(Encodings.EMPTY.value)
 
         (x, y) = self.screen_size
-        player_pos = (x // 4, y - BLOCK_SIZE)
-        enemy_pos = (x // 4 * 3, y - BLOCK_SIZE)
+        player_pos = (0, y - BLOCK_SIZE)
+        enemy_pos = (x - BLOCK_SIZE, 0)
         self.player = Player(player_pos, self.screen_size)
         self.enemy = Player(enemy_pos, self.screen_size)
 
@@ -231,8 +231,10 @@ class Game:
                     running = False
 
             if self.result == Result.UNKNOWN:
-                agent_actions = agent(
-                    np.array([flatten(self.state, BOARD_SIZE)]))
+                grid_state = flatten_grid(
+                    self.state, game.player.head_indexes(), 3)
+
+                agent_actions = agent(np.array([grid_state]))
                 agent_action = int(np.argmax(agent_actions))
                 enemy_action = enemy.action(self.state)
                 self.step(agent_action, enemy_action, wait=True)
@@ -242,6 +244,6 @@ if __name__ == "__main__":
     game = Game()
 
     enemy = Enemy(game.enemy)
-    model = tf.keras.models.load_model(MODEL_NAME, compile=False)
+    model = tf.keras.models.load_model('model.h5', compile=False)
 
     game.run_agent_vs_enemy(model, enemy)
