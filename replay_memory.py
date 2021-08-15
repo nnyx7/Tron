@@ -15,7 +15,8 @@ class ReplayMemory:
             self.__add_index = (self.__add_index + 1) % self.__capacity
 
     def sample(self, batch_size):
-        return random.sample(self.memory, batch_size)
+        return random.choices(self.memory, k=batch_size)
 
     def can_provide_batch(self, batch_size):
         return len(self.memory) >= batch_size
+        # return True
