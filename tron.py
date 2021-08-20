@@ -176,6 +176,9 @@ class Game:
 
         return (self.state, self.result != Result.UNKNOWN, self.result.value)
 
+    def has_ended(self):
+        return self.result != Result.UNKNOWN
+
     def run(self):
         running = True
 
