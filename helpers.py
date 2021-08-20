@@ -1,5 +1,5 @@
 import numpy as np
-
+import tensorflow as tf
 from structs import Encodings
 
 
@@ -24,7 +24,7 @@ def disassemble(batch):
         rewards.append(experience[2])
         next_states.append(experience[3])
 
-    return (np.array(states), np.array(actions), np.array(rewards), np.array(next_states))
+    return (tf.convert_to_tensor(np.array(states)), tf.convert_to_tensor(np.array(actions)), tf.convert_to_tensor(np.array(rewards), dtype=tf.float32), tf.convert_to_tensor(np.array(next_states)))
 
 
 def flatten_grid(state, player_indexes, side_size):
