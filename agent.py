@@ -28,10 +28,14 @@ class Agent:
         state_tensor = tf.convert_to_tensor(state)
         state_tensor = tf.expand_dims(state_tensor, 0)
         actions = self.model(state_tensor, training=False)
-        action = best_possible_action(actions, direction)
+
+        if direction:
+            action = best_possible_action(actions, direction)
+        else:
+            action = tf.argmax(actions[0]).numpy()
         return action
 
-    def action(self, state, direction):
+    def action(self, state, direction=None):
         if random.random() > self.epsilon:
             return self.__exploit(state, direction)
         else:
