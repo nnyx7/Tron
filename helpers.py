@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from structs import Encodings
+from structs import Direction, Encodings
 
 
 def as_indexes(position, block_size):
@@ -55,3 +55,23 @@ def flatten_grid(state, player_indexes, side_size):
         offset_x += 1
 
     return np.array(grid_state).flatten()
+
+
+def best_possible_action(actions, direction):
+    if direction == Direction.UP:
+        mask = np.array([[True, False, True, True]])
+        possible_actions = tf.boolean_mask(actions, mask)
+    elif direction == Direction.DOWN:
+        mask = np.array([[False, True, True, True]])
+        possible_actions = tf.boolean_mask(actions, mask)
+    elif direction == Direction.LEFT:
+        mask = np.array([[True, True, True, False]])
+        possible_actions = tf.boolean_mask(actions, mask)
+    elif direction == Direction.RIGHT:
+        mask = np.array([[True, True, False, True]])
+        possible_actions = tf.boolean_mask(actions, mask)
+
+    best_index = int(np.argmax(possible_actions))
+    best_action = np.array([0, 1, 2, 3])[mask[0]][best_index]
+
+    return best_action
