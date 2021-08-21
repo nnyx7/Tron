@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from constants import *
 from enemy import Enemy
-from helpers import flatten_grid
+from helpers import best_possible_action, flatten_grid
 from player import Player
 from structs import Direction, Encodings, Result
 
@@ -181,6 +181,7 @@ class Game:
 
     def run(self):
         running = True
+        time.sleep(self.update_interval)
 
         while running:
             player_action = None
@@ -196,7 +197,7 @@ class Game:
                         enemy_action = self.enemy_keys[event.key]
                     elif event.key == K_r:
                         self.reset()
-
+                        time.sleep(self.update_interval)
                 elif event.type == QUIT:
                     running = False
 
@@ -204,6 +205,7 @@ class Game:
 
     def run_against_enemy(self, enemy):
         running = True
+        time.sleep(self.update_interval)
 
         while running:
             player_action = None
@@ -216,6 +218,7 @@ class Game:
                         player_action = self.player_keys[event.key]
                     elif event.key == K_r:
                         self.reset()
+                        time.sleep(self.update_interval)
 
                 elif event.type == QUIT:
                     running = False
@@ -225,6 +228,8 @@ class Game:
 
     def run_agent_vs_enemy(self, agent, enemy):
         running = True
+        time.sleep(self.update_interval)
+
         while running:
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -232,6 +237,7 @@ class Game:
                         running = False
                     elif event.key == K_r:
                         self.reset()
+                        time.sleep(self.update_interval)
                 elif event.type == QUIT:
                     running = False
 
@@ -239,35 +245,17 @@ class Game:
                 grid_state = flatten_grid(
                     self.state, game.player.head_indexes(), 3)
                 agent_actions = agent(np.array([grid_state]))
+                agent_action = best_possible_action(
+                    agent_actions, self.player.direction)
 
-                if self.player.direction == Direction.UP:
-                    mask = np.array([[True, False, True, True]])
-                    agent_actions = tf.boolean_mask(agent_actions, mask)
-                elif self.player.direction == Direction.DOWN:
-                    mask = np.array([[False, True, True, True]])
-                    agent_actions = tf.boolean_mask(agent_actions, mask)
-                elif self.player.direction == Direction.LEFT:
-                    mask = np.array([[True, True, True, False]])
-                    agent_actions = tf.boolean_mask(agent_actions, mask)
-                elif self.player.direction == Direction.RIGHT:
-                    mask = np.array([[True, True, False, True]])
-                    agent_actions = tf.boolean_mask(agent_actions, mask)
-
-                print(f'agent actions {agent_actions}')
-
-                agent_action = int(np.argmax(agent_actions))
                 enemy_action = enemy.action(self.state)
-                agent_action = np.array([0, 1, 2, 3])[mask[0]][agent_action]
-                print(f'agent action: {agent_action}')
                 self.step(agent_action, enemy_action, wait=True)
-                grid_state = flatten_grid(
-                    self.state, game.player.head_indexes(), 3)
 
 
 if __name__ == "__main__":
     game = Game()
 
     enemy = Enemy(game.enemy)
-    model = tf.keras.models.load_model('model_105.h5', compile=False)
+    model = tf.keras.models.load_model('model.h5', compile=False)
 
     game.run_agent_vs_enemy(model, enemy)
