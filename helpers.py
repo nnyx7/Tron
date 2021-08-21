@@ -6,6 +6,7 @@ from structs import Direction, Encodings
 def as_indexes(position, block_size):
     return (int(position[0] // block_size), int(position[1] // block_size))
 
+
 def disassemble(batch):
     (states, actions, rewards, next_states) = ([], [], [], [])
 
@@ -64,21 +65,17 @@ def rotated_grid(state, player_indexes, side_size, direction):
 
     return grid_state.flatten()
 
+
 def best_possible_action(actions, direction):
+    arg_sorted = tf.argsort(actions[0])
+
     if direction == Direction.UP:
-        mask = np.array([[True, False, True, True]])
-        possible_actions = tf.boolean_mask(actions, mask)
+        action = arg_sorted[arg_sorted != 1][2]
     elif direction == Direction.DOWN:
-        mask = np.array([[False, True, True, True]])
-        possible_actions = tf.boolean_mask(actions, mask)
+        action = arg_sorted[arg_sorted != 0][2]
     elif direction == Direction.LEFT:
-        mask = np.array([[True, True, True, False]])
-        possible_actions = tf.boolean_mask(actions, mask)
+        action = arg_sorted[arg_sorted != 3][2]
     elif direction == Direction.RIGHT:
-        mask = np.array([[True, True, False, True]])
-        possible_actions = tf.boolean_mask(actions, mask)
+        action = arg_sorted[arg_sorted != 2][2]
 
-    best_index = int(np.argmax(possible_actions))
-    best_action = np.array([0, 1, 2, 3])[mask[0]][best_index]
-
-    return best_action
+    return action
