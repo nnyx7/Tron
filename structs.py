@@ -16,9 +16,8 @@ class Result(Enum):
 
 
 class Encodings(Enum):
-    WALL_HIT = [0, 0, 0, 1]
-    PLAYER_HEAD = [0, 1, 0, 0]
-    PLAYER_BODY = [0, 0, 1, 0]
+    HIT = [0, 0, 1]
+    PLAYER_HEAD = [0, 1, 0]
     # ENEMY_HEAD = 20
     # ENEMY_BODY = 2
-    EMPTY = [1, 0, 0, 0]
+    EMPTY = [1, 0, 0]

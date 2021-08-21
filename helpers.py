@@ -47,7 +47,7 @@ def flatten_grid(state, player_indexes, side_size):
         for j in range(side_size):
             actual_y = y + offset_y
             if (actual_x < 0 or actual_x >= board_x or actual_y < 0 or actual_y >= board_y):
-                grid_state[i][j] = Encodings.WALL_HIT.value
+                grid_state[i][j] = Encodings.HIT.value
             else:
                 grid_state[i][j] = state[actual_x][actual_y]
             offset_y += 1

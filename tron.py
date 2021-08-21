@@ -92,9 +92,9 @@ class Game:
         (x, y) = self.player.head_indexes()
 
         if self.player.collision_with_wall():
-            self.state[prev_x][prev_y] = Encodings.WALL_HIT.value
+            self.state[prev_x][prev_y] = Encodings.HIT.value
         else:
-            self.state[prev_x][prev_y] = Encodings.PLAYER_BODY.value
+            self.state[prev_x][prev_y] = Encodings.HIT.value
             self.state[x][y] = Encodings.PLAYER_HEAD.value
 
         # Enemy
