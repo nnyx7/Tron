@@ -6,15 +6,6 @@ from structs import Direction, Encodings
 def as_indexes(position, block_size):
     return (int(position[0] // block_size), int(position[1] // block_size))
 
-
-# def flatten(state, board_size):
-#     flatten_state = []
-#     for i in range(board_size[0]):
-#         for j in range(board_size[1]):
-#           flatten_state.append(state[i][j])
-#     return flatten_state
-
-
 def disassemble(batch):
     (states, actions, rewards, next_states) = ([], [], [], [])
 
@@ -27,7 +18,7 @@ def disassemble(batch):
     return (tf.convert_to_tensor(np.array(states)), tf.convert_to_tensor(np.array(actions)), tf.convert_to_tensor(np.array(rewards), dtype=tf.float32), tf.convert_to_tensor(np.array(next_states)))
 
 
-def flatten_grid(state, player_indexes, side_size):
+def get_grid(state, player_indexes, side_size):
     grid_state = []
     for i in range(side_size):
         grid_state.append([])
@@ -54,8 +45,24 @@ def flatten_grid(state, player_indexes, side_size):
 
         offset_x += 1
 
-    return np.array(grid_state).flatten()
+    return np.array(grid_state)
 
+
+def flatten_grid(state, player_indexes, side_size):
+    return get_grid(state, player_indexes, side_size).flatten()
+
+
+def rotated_grid(state, player_indexes, side_size, direction):
+    grid_state = get_grid(state, player_indexes, side_size)
+
+    if direction == Direction.LEFT:
+        grid_state = np.rot90(grid_state, k=1)
+    elif direction == Direction.RIGHT:
+        grid_state = np.rot90(grid_state, k=-1)
+    elif direction == Direction.DOWN:
+        grid_state = np.rot90(grid_state, k=2)
+
+    return grid_state.flatten()
 
 def best_possible_action(actions, direction):
     if direction == Direction.UP:
