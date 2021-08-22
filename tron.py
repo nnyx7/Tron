@@ -19,35 +19,41 @@ ENEMY_KEYS = {K_w: Direction.UP, K_s: Direction.DOWN,
 
 
 class Game:
-    def __init__(self, update_interval=INTERVAL, board_size=BOARD_SIZE, player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True):
+    actions = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
+
+    def __init__(self, update_interval=INTERVAL, board_size=BOARD_SIZE, player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True, with_enemy=False):
         self.update_interval = update_interval
-        self.screen_size = (
-            board_size[0] * BLOCK_SIZE, board_size[1] * BLOCK_SIZE)
-
-        self.actions = [Direction.UP, Direction.DOWN,
-                        Direction.LEFT, Direction.RIGHT]
-
-        self.state = []
-        (size_x, size_y) = self.screen_size
-        for i in range(size_x // BLOCK_SIZE):
-            self.state.append([])
-            for j in range(size_y // BLOCK_SIZE):
-                self.state[i].append(Encodings.EMPTY.value)
-
-        (x, y) = self.screen_size
-        player_pos = (0, y - BLOCK_SIZE)
-        enemy_pos = (x - BLOCK_SIZE, 0)
-        self.player = Player(player_pos, self.screen_size)
-        self.enemy = Player(enemy_pos, self.screen_size)
-
         self.player_keys = player_keys
         self.enemy_keys = enemy_keys
-
         self.ui = ui
+        self.with_enemy = with_enemy
+
+        (max_x_index, max_y_index) = board_size
+
+        self.screen_size = (max_x_index * BLOCK_SIZE, max_y_index * BLOCK_SIZE)
+
+        self.state = []
+        for i in range(max_x_index):
+            self.state.append([])
+            for j in range(max_y_index):
+                self.state[i].append(Encodings.EMPTY.value)
+
+        if self.with_enemy:
+            # Fixed at the top
+            self.player = Player((0, max_x_index), (0, 1), self.screen_size)
+            # Fixed at the bottom
+            self.enemy = Player(
+                (0, max_x_index), (max_y_index - 1, max_y_index), self.screen_size)
+        else:
+            self.player = Player(
+                (0, max_x_index), (0, max_y_index), self.screen_size)
+            self.enemy = None
 
         if (self.ui):
             self.enable_ui()
 
+        self.result = Result.UNKNOWN
+        self.steps_counter = 0
         self.reset()
 
     def enable_ui(self):
@@ -59,19 +65,21 @@ class Game:
 
     def reset(self):
         self.result = Result.UNKNOWN
-        self.player.reset()
-        self.enemy.reset()
+        self.steps_counter = 0
 
         (size_x, size_y) = self.screen_size
         for i in range(size_x // BLOCK_SIZE):
             for j in range(size_y // BLOCK_SIZE):
                 self.state[i][j] = Encodings.EMPTY.value
 
+        self.player.reset()
         (player_x, player_y) = self.player.head_indexes()
         self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
 
-        # (enemy_x, enemy_y) = self.enemy.head_indexes()
-        # self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
+        if self.with_enemy:
+            self.enemy.reset()
+            (enemy_x, enemy_y) = self.enemy.head_indexes()
+            self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
 
         if (self.ui):
             self.surface.fill(BACKGROUND_COLOR)
@@ -89,37 +97,37 @@ class Game:
     def __update_state(self):
         # Player
         (prev_x, prev_y) = self.player.prev_head_indexes()
-        (x, y) = self.player.head_indexes()
+        self.state[prev_x][prev_y] = Encodings.HIT.value
 
-        if self.player.collision_with_wall():
-            self.state[prev_x][prev_y] = Encodings.HIT.value
-        else:
-            self.state[prev_x][prev_y] = Encodings.HIT.value
+        if not self.player.collision_with_wall():
+            (x, y) = self.player.head_indexes()
             self.state[x][y] = Encodings.PLAYER_HEAD.value
 
-        # Enemy
-        # (prev_x, prev_y) = self.enemy.prev_head_indexes()
-        # (x, y) = self.enemy.head_indexes()
+        if self.with_enemy:
+            # Enemy
+            (prev_x, prev_y) = self.enemy.prev_head_indexes()
+            self.state[prev_x][prev_y] = Encodings.HIT.value
 
-        # if self.enemy.collision_with_wall():
-        #     self.state[prev_x][prev_y] += Encodings.WALL_HIT.value
-        # else:
-        #     self.state[prev_x][prev_y] += (Encodings.ENEMY_BODY.value -
-        #                                    Encodings.ENEMY_HEAD.value)
-        #     self.state[x][y] += Encodings.ENEMY_HEAD.value
+            if not self.enemy.collision_with_wall():
+                (x, y) = self.enemy.head_indexes()
+                self.state[x][y] = Encodings.ENEMY_HEAD.value
 
     def __update_result(self):
-        has_player_lost = self.player.collision(self.enemy.x, self.enemy.y)
-        # has_enemy_lost = self.enemy.collision(self.player.x, self.player.y)
+        if self.with_enemy:
+            has_player_lost = self.player.collision(
+                (self.enemy.x, self.enemy.y))
+            has_enemy_lost = self.enemy.collision(
+                (self.player.x, self.player.y))
 
-        # if has_player_lost and has_enemy_lost:
-        #     self.result = Result.DRAW
-        # elif has_player_lost:
-        #     self.result = Result.LOSE
-        # elif has_enemy_lost:
-        #     self.result = Result.WIN
-        if has_player_lost:
-            self.result = Result.LOSE
+            if has_player_lost and has_enemy_lost:
+                self.result = Result.DRAW
+            elif has_player_lost:
+                self.result = Result.LOSE
+            elif has_enemy_lost:
+                self.result = Result.WIN
+        else:
+            if self.player.collision(enemy_positions=None):
+                self.result = Result.LOSE
 
     def __display_result(self):
         font = pygame.font.SysFont('arial', 30)
@@ -136,10 +144,12 @@ class Game:
         for i in range(self.player.length):
             self.surface.blit(self.player_block,
                               (self.player.x[i], self.player.y[i]))
-        # Draw enemy
-        # for i in range(self.enemy.length):
-        #     self.surface.blit(self.enemy_block,
-        #                       (self.enemy.x[i], self.enemy.y[i]))
+        if self.with_enemy:
+            # Draw enemy
+            for i in range(self.enemy.length):
+                self.surface.blit(self.enemy_block,
+                                  (self.enemy.x[i], self.enemy.y[i]))
+
         pygame.display.flip()
 
     def print_state(self):
@@ -151,21 +161,27 @@ class Game:
 
         print(state_string)
 
-    def step(self, action, enemy_action, wait=False):
-        action_int = int(action)
-        if self.result == Result.UNKNOWN:
-            if isinstance(action_int, int):
-                action = self.actions[action]
-            if isinstance(enemy_action, int):
-                enemy_action = self.actions[enemy_action]
+    def __try_as_index(action):
+        try:
+            return Game.actions[int(action)]
+        except:
+            return action
 
-            self.player.move(action)
-            # self.enemy.move(enemy_action)
+    def step(self, action, enemy_action, wait=False):
+        if self.result == Result.UNKNOWN:
+            action = Game.__try_as_index(action)
+            self.player.move(action, self.steps_counter == 0)
             self.player.progress()
-            # self.enemy.progress()
+
+            if self.with_enemy:
+                enemy_action = Game.__try_as_index(enemy_action)
+                self.enemy.move(enemy_action, self.steps_counter == 0)
+                self.enemy.progress()
 
             self.__update_state()
             self.__update_result()
+
+            self.steps_counter += 1
 
             if (self.ui):
                 self.__update_ui()
@@ -204,6 +220,9 @@ class Game:
             self.step(player_action, enemy_action, wait=True)
 
     def run_against_enemy(self, enemy):
+        if not self.with_enemy:
+            raise("Enemy presence is not enabled")
+
         running = True
         time.sleep(self.update_interval)
 
@@ -227,6 +246,9 @@ class Game:
                 self.step(player_action, enemy.action(self.state), wait=True)
 
     def run_agent_vs_enemy(self, agent, enemy):
+        if not self.with_enemy:
+            raise("Enemy presence is not enabled")
+
         running = True
         time.sleep(self.update_interval)
 

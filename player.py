@@ -6,46 +6,43 @@ from structs import Direction
 
 
 class Player:
-    def __init__(self, init_coordinates, board_size):
-        self.init_coordinates = init_coordinates
+    def __init__(self, x_index_limits, y_index_limits, board_size):
+        self.x_index_limits = x_index_limits
+        self.y_index_limits = y_index_limits
         self.board_size = board_size
 
         self.reset()
 
     def reset(self):
         self.length = 1
-        # self.x = [self.init_coordinates[0]]
-        # self.y = [self.init_coordinates[1]]
-        self.x = [random.randrange(self.board_size[0] // 30) * 30]
-        self.y = [random.randrange(self.board_size[1] // 30) * 30]
+        (x_min, x_max) = self.x_index_limits
+        (y_min, y_max) = self.y_index_limits
+        self.x = [random.randrange(x_min, x_max) * 30]
+        self.y = [random.randrange(y_min, y_max) * 30]
 
         self.direction = Direction.UP
 
-    def move_up(self):
-        if (self.direction != Direction.DOWN):
-            self.direction = Direction.UP
+    def move(self, action, first_move):
+        if first_move:
+            if (action == Direction.UP or action == Direction.DOWN
+                    or action == Direction.LEFT or action == Direction.RIGHT):
+                self.direction = action
+        else:
+            if action == Direction.UP and \
+                    self.direction != Direction.DOWN:
+                self.direction = Direction.UP
 
-    def move_down(self):
-        if (self.direction != Direction.UP):
-            self.direction = Direction.DOWN
+            elif action == Direction.DOWN and \
+                    self.direction != Direction.UP:
+                self.direction = Direction.DOWN
 
-    def move_left(self):
-        if (self.direction != Direction.RIGHT):
-            self.direction = Direction.LEFT
+            elif action == Direction.LEFT and \
+                    self.direction != Direction.RIGHT:
+                self.direction = Direction.LEFT
 
-    def move_right(self):
-        if (self.direction != Direction.LEFT):
-            self.direction = Direction.RIGHT
-
-    def move(self, action):
-        if action == Direction.UP:
-            self.move_up()
-        elif action == Direction.DOWN:
-            self.move_down()
-        elif action == Direction.LEFT:
-            self.move_left()
-        elif action == Direction.RIGHT:
-            self.move_right()
+            elif action == Direction.RIGHT and \
+                    self.direction != Direction.LEFT:
+                self.direction = Direction.RIGHT
 
     def progress(self):
         (last_x, last_y) = self.head()
@@ -84,14 +81,16 @@ class Player:
         return (head_x < 0 or head_x > (
             screen_x - BLOCK_SIZE) or head_y < 0 or head_y > (screen_y - BLOCK_SIZE))
 
-    def collision(self, enemy_x, enemy_y):
+    def collision(self, enemy_positions):
         (head_x, head_y) = self.head()
 
         crashing_in_enemy = False
-        # for i in range(len(enemy_x)):
-        #     if ((head_x, head_y) == (enemy_x[i], enemy_y[i])):
-        #         crashing_in_enemy = True
-        #         break
+        if enemy_positions:
+            (enemy_x, enemy_y) = enemy_positions
+            for i in range(len(enemy_x)):
+                if ((head_x, head_y) == (enemy_x[i], enemy_y[i])):
+                    crashing_in_enemy = True
+                    break
 
         crashing_in_self = False
         for i in range(len(self.x) - 1):
