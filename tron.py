@@ -39,11 +39,13 @@ class Game:
                 self.state[i].append(Encodings.EMPTY.value)
 
         if self.with_enemy:
-            # Fixed at the top
-            self.player = Player((0, max_x_index), (0, 1), self.screen_size)
-            # Fixed at the bottom
+            # Random on the upper half of the board
+            self.player = Player(
+                (0, max_x_index), (0, max_y_index // 2), self.screen_size)
+            # Random pn the lower half of the board
             self.enemy = Player(
-                (0, max_x_index), (max_y_index - 1, max_y_index), self.screen_size)
+                (0, max_x_index), (max_y_index // 2, max_y_index), self.screen_size)
+
         else:
             self.player = Player(
                 (0, max_x_index), (0, max_y_index), self.screen_size)
