@@ -14,39 +14,27 @@ class Enemy:
         values = {Direction.UP: 0, Direction.DOWN: 0,
                   Direction.LEFT: 0, Direction.RIGHT: 0}
 
-        if x < 1:
-            values[Direction.LEFT] = 2
-        elif state[x - 1][y] == Encodings.EMPTY.value:
+        # left
+        if x >= 1 and state[x - 1][y] == Encodings.EMPTY.value:
             values[Direction.LEFT] = 0
-        elif state[x - 1][y] == Encodings.PLAYER_HEAD.value:
-            values[Direction.LEFT] = 1
         else:
             values[Direction.LEFT] = 2
 
-        if x > max_x - 1:
-            values[Direction.RIGHT] = 2
-        elif state[x + 1][y] == Encodings.EMPTY.value:
+        # right
+        if x <= (max_x - 1) and state[x + 1][y] == Encodings.EMPTY.value:
             values[Direction.RIGHT] = 0
-        elif state[x + 1][y] == Encodings.PLAYER_HEAD.value:
-            values[Direction.RIGHT] = 1
         else:
             values[Direction.RIGHT] = 2
 
-        if y < 1:
-            values[Direction.UP] = 2
-        elif state[x][y - 1] == Encodings.EMPTY.value:
+        # up
+        if y >= 1 and state[x][y - 1] == Encodings.EMPTY.value:
             values[Direction.UP] = 0
-        elif state[x][y - 1] == Encodings.PLAYER_HEAD.value:
-            values[Direction.UP] = 1
         else:
             values[Direction.UP] = 2
 
-        if y > max_y - 1:
-            values[Direction.DOWN] = 2
-        elif state[x][y + 1] == Encodings.EMPTY.value:
+        # down
+        if y <= (max_y - 1) and state[x][y + 1] == Encodings.EMPTY.value:
             values[Direction.DOWN] = 0
-        elif state[x][y + 1] == Encodings.PLAYER_HEAD.value:
-            values[Direction.DOWN] = 1
         else:
             values[Direction.DOWN] = 2
 
