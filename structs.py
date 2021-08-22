@@ -17,6 +17,6 @@ class Result(Enum):
 
 class Encodings(Enum):
     HIT = [0, 0, 1]
-    PLAYER_HEAD = [0, 1, 0]
-    ENEMY_HEAD = HIT
     EMPTY = [1, 0, 0]
+    PLAYER_HEAD = [0, 1, 0]
+    ENEMY_HEAD = PLAYER_HEAD
