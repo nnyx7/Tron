@@ -41,10 +41,10 @@ class Game:
         if self.with_enemy:
             # Random on the upper half of the board
             self.player = Player(
-                (0, max_x_index), (0, max_y_index // 2), self.screen_size)
+                (0, max_x_index), (0, max_y_index), self.screen_size)
             # Random pn the lower half of the board
             self.enemy = Player(
-                (0, max_x_index), (max_y_index // 2, max_y_index), self.screen_size)
+                (0, max_x_index), (0, max_y_index), self.screen_size)
 
         else:
             self.player = Player(
@@ -80,6 +80,8 @@ class Game:
 
         if self.with_enemy:
             self.enemy.reset()
+            while (self.enemy.x == self.player.x and self.enemy.y == self.player.y):
+                self.enemy.reset()
             (enemy_x, enemy_y) = self.enemy.head_indexes()
             self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
 
