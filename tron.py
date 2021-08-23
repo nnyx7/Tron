@@ -6,7 +6,8 @@ import tensorflow as tf
 
 from constants import *
 from enemy import Enemy
-from helpers import best_possible_action, flatten
+from helpers import flatten
+from model_wrapper import ModelWrapper
 from player import Player
 from structs import Direction, Encodings, Result
 
@@ -120,12 +121,12 @@ class Game:
                 self.__update_ui()
                 if self.result != Result.UNKNOWN:
                     self.__display_result()
-            if wait:
-                time.sleep(self.update_interval)
+        if wait:
+            time.sleep(self.update_interval)
 
         return (self.state, self.result != Result.UNKNOWN, self.result.value)
 
-    def grid(self, side_size):
+    def grid(self, side_size, center='player'):
         grid_state = []
         for i in range(side_size):
             grid_state.append([])
@@ -135,7 +136,12 @@ class Game:
         (board_x, board_y) = self.board_size
         offset = int(-(side_size - 1) // 2)
 
-        (x, y) = self.player.head_indexes()
+        if center == 'player':
+            (x, y) = self.player.head_indexes()
+        elif center == 'enemy':
+            (x, y) = self.enemy.head_indexes()
+        else:
+            (x, y) = center
 
         offset_x = offset
         for i in range(side_size):
@@ -204,9 +210,9 @@ class Game:
                     running = False
 
             if self.result == Result.UNKNOWN:
-                self.step(player_action, enemy.action(self.state), wait=True)
+                self.step(player_action, enemy(self.state), wait=True)
 
-    def run_agent_vs_enemy(self, agent, grid_size, enemy):
+    def run_agent_vs_enemy(self, agent, enemy, grid_size=3):
         if not self.with_enemy:
             raise("Enemy presence is not enabled")
 
@@ -226,11 +232,9 @@ class Game:
 
             if self.result == Result.UNKNOWN:
                 grid_state = flatten(self.grid(grid_size))
-                agent_actions = agent(np.array([grid_state]))
-                agent_action = best_possible_action(
-                    agent_actions, self.player.direction)
+                agent_action = agent(grid_state, self.player.direction)
 
-                enemy_action = enemy.action(self.state)
+                enemy_action = enemy(self.state)
                 self.step(agent_action, enemy_action, wait=True)
 
     def __print_state(self):
@@ -308,10 +312,51 @@ class Game:
         pygame.display.flip()
 
 
+def evaluate(agent, grid_size, board_size, num_games, against_enemy, ui=False, interval=0.1):
+    game = Game(update_interval=interval,
+                board_size=board_size, ui=ui, with_enemy=True)
+    if against_enemy:
+        enemy = Enemy(game.enemy)
+    else:
+        enemy = agent
+
+    results = {Result.WIN: 0, Result.DRAW: 0, Result.LOSE: 0}
+
+    for i in range(num_games):
+        game.reset()
+        if (i % (num_games // 10) == 0):
+            print(f'games played: {i}')
+        while not game.has_ended():
+            state = game.state
+
+            grid_state = flatten(game.grid(grid_size))
+            agent_action = agent(grid_state, game.player.direction)
+
+            if against_enemy:
+                enemy_action = enemy(state)
+            else:
+                grid_state = flatten(game.grid(grid_size, center='enemy'))
+                enemy_action = agent(grid_state, game.enemy.direction)
+
+            _, has_ended, result = game.step(
+                agent_action, enemy_action, wait=ui)
+
+            if has_ended:
+                if result == Result.WIN.value:
+                    results[Result.WIN] += 1
+                elif result == Result.DRAW.value:
+                    results[Result.DRAW] += 1
+                elif result == Result.LOSE.value:
+                    results[Result.LOSE] += 1
+
+    return results
+
+
 if __name__ == "__main__":
-    game = Game()
+    game = Game(with_enemy=True)
 
     enemy = Enemy(game.enemy)
-    model = tf.keras.models.load_model('model.h5', compile=False)
+    model = tf.keras.models.load_model('model_last.h5', compile=False)
+    agent = ModelWrapper(model)
 
-    game.run_agent_vs_enemy(model, enemy)
+    game.run_agent_vs_enemy(agent, enemy)

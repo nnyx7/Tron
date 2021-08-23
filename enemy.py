@@ -6,6 +6,9 @@ class Enemy:
     def __init__(self, enemy):
         self.enemy = enemy
 
+    def __call__(self, state):
+        return self.action(state)
+
     def action(self, state):
         (x, y) = self.enemy.head_indexes()
         max_x = len(state) - 1
