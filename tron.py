@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from constants import *
 from enemy import Enemy
-from helpers import best_possible_action, flatten_grid
+from helpers import best_possible_action, flatten
 from player import Player
 from structs import Direction, Encodings, Result
 
@@ -25,12 +25,13 @@ class Game:
                  player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True, with_enemy=False):
 
         self.update_interval = update_interval
+        self.board_size = board_size
         self.player_keys = player_keys
         self.enemy_keys = enemy_keys
         self.ui = ui
         self.with_enemy = with_enemy
 
-        (max_x_index, max_y_index) = board_size
+        (max_x_index, max_y_index) = self.board_size
 
         self.screen_size = (max_x_index * BLOCK_SIZE, max_y_index * BLOCK_SIZE)
 
@@ -124,6 +125,34 @@ class Game:
 
         return (self.state, self.result != Result.UNKNOWN, self.result.value)
 
+    def grid(self, side_size):
+        grid_state = []
+        for i in range(side_size):
+            grid_state.append([])
+            for j in range(side_size):
+                grid_state[i].append(Encodings.EMPTY.value)
+
+        (board_x, board_y) = self.board_size
+        offset = int(-(side_size - 1) // 2)
+
+        (x, y) = self.player.head_indexes()
+
+        offset_x = offset
+        for i in range(side_size):
+            actual_x = x + offset_x
+
+            offset_y = offset
+            for j in range(side_size):
+                actual_y = y + offset_y
+                if (actual_x < 0 or actual_x >= board_x or actual_y < 0 or actual_y >= board_y):
+                    grid_state[i][j] = Encodings.HIT.value
+                else:
+                    grid_state[i][j] = self.state[actual_x][actual_y]
+                offset_y += 1
+            offset_x += 1
+
+        return grid_state
+
     def has_ended(self):
         return self.result != Result.UNKNOWN
 
@@ -177,7 +206,7 @@ class Game:
             if self.result == Result.UNKNOWN:
                 self.step(player_action, enemy.action(self.state), wait=True)
 
-    def run_agent_vs_enemy(self, agent, enemy):
+    def run_agent_vs_enemy(self, agent, grid_size, enemy):
         if not self.with_enemy:
             raise("Enemy presence is not enabled")
 
@@ -196,8 +225,7 @@ class Game:
                     running = False
 
             if self.result == Result.UNKNOWN:
-                grid_state = flatten_grid(
-                    self.state, game.player.head_indexes(), 3)
+                grid_state = flatten(self.grid(grid_size))
                 agent_actions = agent(np.array([grid_state]))
                 agent_action = best_possible_action(
                     agent_actions, self.player.direction)

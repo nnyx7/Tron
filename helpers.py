@@ -19,43 +19,11 @@ def disassemble(batch):
     return (tf.convert_to_tensor(np.array(states)), tf.convert_to_tensor(np.array(actions)), tf.convert_to_tensor(np.array(rewards), dtype=tf.float32), tf.convert_to_tensor(np.array(next_states)))
 
 
-def get_grid(state, player_indexes, side_size):
-    grid_state = []
-    for i in range(side_size):
-        grid_state.append([])
-        for j in range(side_size):
-            grid_state[i].append(Encodings.EMPTY.value)
-
-    (board_x, board_y) = (len(state), len(state[0]))
-    offset = int(-(side_size - 1) // 2)
-
-    (x, y) = player_indexes
-
-    offset_x = offset
-    for i in range(side_size):
-        actual_x = x + offset_x
-
-        offset_y = offset
-        for j in range(side_size):
-            actual_y = y + offset_y
-            if (actual_x < 0 or actual_x >= board_x or actual_y < 0 or actual_y >= board_y):
-                grid_state[i][j] = Encodings.HIT.value
-            else:
-                grid_state[i][j] = state[actual_x][actual_y]
-            offset_y += 1
-
-        offset_x += 1
-
-    return np.array(grid_state)
+def flatten(array):
+    return np.array(array).flatten()
 
 
-def flatten_grid(state, player_indexes, side_size):
-    return get_grid(state, player_indexes, side_size).flatten()
-
-
-def rotated_grid(state, player_indexes, side_size, direction):
-    grid_state = get_grid(state, player_indexes, side_size)
-
+def rotated_grid(grid_state, direction):
     if direction == Direction.LEFT:
         grid_state = np.rot90(grid_state, k=1)
     elif direction == Direction.RIGHT:
@@ -63,7 +31,7 @@ def rotated_grid(state, player_indexes, side_size, direction):
     elif direction == Direction.DOWN:
         grid_state = np.rot90(grid_state, k=2)
 
-    return grid_state.flatten()
+    return grid_state
 
 
 def best_possible_action(actions, direction):
