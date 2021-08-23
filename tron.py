@@ -171,18 +171,12 @@ class Game:
             enemy_action = None
 
             for event in pygame.event.get():
+                running = self.__resolve_game_controls(event, running)
                 if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        running = False
-                    elif event.key in self.player_keys:
+                    if event.key in self.player_keys:
                         player_action = self.player_keys[event.key]
                     elif event.key in self.enemy_keys:
                         enemy_action = self.enemy_keys[event.key]
-                    elif event.key == K_r:
-                        self.reset()
-                        time.sleep(self.update_interval)
-                elif event.type == QUIT:
-                    running = False
 
             self.step(player_action, enemy_action, wait=True)
 
@@ -197,20 +191,25 @@ class Game:
             player_action = None
 
             for event in pygame.event.get():
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        running = False
-                    elif event.key in self.player_keys:
-                        player_action = self.player_keys[event.key]
-                    elif event.key == K_r:
-                        self.reset()
-                        time.sleep(self.update_interval)
-
-                elif event.type == QUIT:
-                    running = False
+                running = self.__resolve_game_controls(event, running)
+                if event.type == KEYDOWN and event.key in self.player_keys:
+                    player_action = self.player_keys[event.key]
 
             if self.result == Result.UNKNOWN:
                 self.step(player_action, enemy(self.state), wait=True)
+
+    def run_agent(self, agent, grid_size=3):
+        running = True
+        time.sleep(self.update_interval)
+
+        while running:
+            for event in pygame.event.get():
+                running = self.__resolve_game_controls(event, running)
+
+            if self.result == Result.UNKNOWN:
+                grid_state = flatten(self.grid(grid_size))
+                agent_action = agent(grid_state, self.player.direction)
+                self.step(agent_action, None, wait=True)
 
     def run_agent_vs_enemy(self, agent, enemy, grid_size=3):
         if not self.with_enemy:
@@ -221,14 +220,7 @@ class Game:
 
         while running:
             for event in pygame.event.get():
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        running = False
-                    elif event.key == K_r:
-                        self.reset()
-                        time.sleep(self.update_interval)
-                elif event.type == QUIT:
-                    running = False
+                running = self.__resolve_game_controls(event, running)
 
             if self.result == Result.UNKNOWN:
                 grid_state = flatten(self.grid(grid_size))
@@ -236,6 +228,18 @@ class Game:
 
                 enemy_action = enemy(self.state)
                 self.step(agent_action, enemy_action, wait=True)
+
+    def __resolve_game_controls(self, event, running):
+        if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                running = False
+            elif event.key == K_r:
+                self.reset()
+                time.sleep(self.update_interval)
+        elif event.type == QUIT:
+            running = False
+
+        return running
 
     def __print_state(self):
         state_string = ""
