@@ -62,7 +62,7 @@ class Game:
         self.steps_counter = 0
         self.reset()
 
-    def reset(self):
+    def reset(self, player_init_pos=None, enemy_init_pos=None):
         self.result = Result.UNKNOWN
         self.steps_counter = 0
 
@@ -71,12 +71,12 @@ class Game:
             for j in range(size_y // BLOCK_SIZE):
                 self.state[i][j] = Encodings.EMPTY.value
 
-        self.player.reset()
+        self.player.reset(init_pos=player_init_pos)
         (player_x, player_y) = self.player.head_indexes()
         self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
 
         if self.with_enemy:
-            self.enemy.reset()
+            self.enemy.reset(init_pos=enemy_init_pos)
             while (self.enemy.x == self.player.x and self.enemy.y == self.player.y):
                 self.enemy.reset()
             (enemy_x, enemy_y) = self.enemy.head_indexes()
@@ -229,6 +229,15 @@ class Game:
                 enemy_action = enemy(self.state)
                 self.step(agent_action, enemy_action, wait=True)
 
+    def print_state(self):
+        state_string = ""
+        for j in range(len(self.state[0])):
+            for i in range(len(self.state)):
+                state_string += f'{self.state[i][j]} '
+            state_string += '\n'
+
+        print(state_string)
+
     def __resolve_game_controls(self, event, running):
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -241,19 +250,11 @@ class Game:
 
         return running
 
-    def __print_state(self):
-        state_string = ""
-        for j in range(len(self.state[0])):
-            for i in range(len(self.state)):
-                state_string += f'{self.state[i][j]} '
-            state_string += '\n'
-
-        print(state_string)
-
     def __enable_ui(self):
         self.ui = True
         pygame.init()
         self.surface = pygame.display.set_mode(self.screen_size)
+        pygame.display.set_caption('Tron')
         self.player_block = pygame.image.load("assets/blue.png").convert()
         self.enemy_block = pygame.image.load("assets/yellow.png").convert()
 
@@ -354,6 +355,29 @@ def evaluate(agent, grid_size, board_size, num_games, against_enemy, ui=False, i
                     results[Result.LOSE] += 1
 
     return results
+
+
+def evaluate_without_enemy(agent, grid_size, board_size, ui=False, interval=0.1):
+    game = Game(update_interval=interval, board_size=board_size, ui=ui)
+
+    total_reward = 0
+
+    for j in range(board_size[1]):
+        for i in range(board_size[0]):
+            game.reset(player_init_pos=(i * BLOCK_SIZE, j * BLOCK_SIZE))
+            reward = 0
+            while not game.has_ended():
+                grid_state = flatten(game.grid(grid_size))
+                agent_action = agent(grid_state, game.player.direction)
+
+                _, has_ended, _ = game.step(agent_action, None, wait=ui)
+
+                if has_ended:
+                    total_reward += reward
+                else:
+                    reward += 1
+
+    return total_reward / (board_size[0] * board_size[1])
 
 
 if __name__ == "__main__":

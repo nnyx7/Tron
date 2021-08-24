@@ -13,12 +13,16 @@ class Player:
 
         self.reset()
 
-    def reset(self):
+    def reset(self, init_pos=None):
         self.length = 1
-        (x_min, x_max) = self.x_index_limits
-        (y_min, y_max) = self.y_index_limits
-        self.x = [random.randrange(x_min, x_max) * 30]
-        self.y = [random.randrange(y_min, y_max) * 30]
+        if init_pos:
+            self.x = [init_pos[0]]
+            self.y = [init_pos[1]]
+        else:
+            (x_min, x_max) = self.x_index_limits
+            (y_min, y_max) = self.y_index_limits
+            self.x = [random.randrange(x_min, x_max) * 30]
+            self.y = [random.randrange(y_min, y_max) * 30]
 
         self.direction = Direction.UP
 
