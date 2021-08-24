@@ -6,6 +6,9 @@ from helpers import best_possible_action
 
 
 class Agent:
+    __clockwise = {0: 0, 1: 2, 2: 3, 3: 1}
+    __rev_clockwise = {0: 0, 1: 3, 2: 1, 3: 2}
+
     def __init__(self, model, num_actions, min_epsilon, max_epsilon, epsilon_decay_rate):
         self.model = model()
         self.target_model = model()
@@ -29,10 +32,20 @@ class Agent:
         state_tensor = tf.expand_dims(state_tensor, 0)
         actions = self.model(state_tensor, training=False)
 
-        if direction:
-            action = best_possible_action(actions, direction)
-        else:
-            action = tf.argmax(actions[0]).numpy()
+        action = tf.argmax(actions[0]).numpy()
+
+        if direction and direction != 'up':
+
+            if direction == 'right':
+                shift = 1
+            elif direction == 'down':
+                shift = 2
+            elif direction == 'left':
+                shift = 3
+
+            action = Agent.__rev_clockwise[(
+                Agent.__clockwise[action] + shift) % self.num_actions]
+
         return action
 
     def action(self, state, direction=None):
