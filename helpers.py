@@ -19,21 +19,6 @@ def disassemble(batch):
     return (tf.convert_to_tensor(np.array(states)), tf.convert_to_tensor(np.array(actions)), tf.convert_to_tensor(np.array(rewards), dtype=tf.float32), tf.convert_to_tensor(np.array(next_states)))
 
 
-def flatten(array):
-    return np.array(array).flatten()
-
-
-def rotated_grid(grid_state, direction):
-    if direction == Direction.LEFT:
-        grid_state = np.rot90(grid_state, k=1)
-    elif direction == Direction.RIGHT:
-        grid_state = np.rot90(grid_state, k=-1)
-    elif direction == Direction.DOWN:
-        grid_state = np.rot90(grid_state, k=2)
-
-    return grid_state
-
-
 def best_possible_action(actions, direction):
     arg_sorted = tf.argsort(actions[0])
 
@@ -46,4 +31,4 @@ def best_possible_action(actions, direction):
     elif direction == Direction.RIGHT:
         action = arg_sorted[arg_sorted != 2][2]
 
-    return action
+    return action.numpy()

@@ -5,8 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from constants import *
-from enemy import Enemy
-from helpers import flatten
+from enemy import *
 from model_wrapper import ModelWrapper
 from player import Player
 from structs import Direction, Encodings, Result
@@ -20,7 +19,7 @@ ENEMY_KEYS = {K_w: Direction.UP, K_s: Direction.DOWN,
 
 
 class Game:
-    actions = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
+    actions = ACTIONS
 
     def __init__(self, update_interval=INTERVAL, board_size=BOARD_SIZE,
                  player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True, with_enemy=False):
@@ -126,7 +125,7 @@ class Game:
 
         return (self.state, self.result != Result.UNKNOWN, self.result.value)
 
-    def grid(self, side_size, center='player'):
+    def __grid(self, side_size, center='player'):
         grid_state = []
         for i in range(side_size):
             grid_state.append([])
@@ -158,6 +157,26 @@ class Game:
             offset_x += 1
 
         return grid_state
+
+    def grid(self, side_size, center='player'):
+        return np.array(self.__grid(side_size, center)).flatten()
+
+    def rotated_grid(self, side_size, center='player'):
+        grid_state = self.__grid(side_size, center)
+
+        if center == 'player':
+            direction = self.player.direction
+        elif center == 'enemy':
+            direction = self.enemy.direction
+
+        if direction == Direction.LEFT:
+            grid_state = np.rot90(grid_state, k=1)
+        elif direction == Direction.RIGHT:
+            grid_state = np.rot90(grid_state, k=-1)
+        elif direction == Direction.DOWN:
+            grid_state = np.rot90(grid_state, k=2)
+
+        return np.array(grid_state).flatten()
 
     def has_ended(self):
         return self.result != Result.UNKNOWN
@@ -207,7 +226,7 @@ class Game:
                 running = self.__resolve_game_controls(event, running)
 
             if self.result == Result.UNKNOWN:
-                grid_state = flatten(self.grid(grid_size))
+                grid_state = self.grid(grid_size)
                 agent_action = agent(grid_state, self.player.direction)
                 self.step(agent_action, None, wait=True)
 
@@ -223,7 +242,7 @@ class Game:
                 running = self.__resolve_game_controls(event, running)
 
             if self.result == Result.UNKNOWN:
-                grid_state = flatten(self.grid(grid_size))
+                grid_state = self.grid(grid_size)
                 agent_action = agent(grid_state, self.player.direction)
 
                 enemy_action = enemy(self.state)
@@ -317,11 +336,11 @@ class Game:
         pygame.display.flip()
 
 
-def evaluate(agent, grid_size, board_size, num_games, against_enemy, ui=False, interval=0.1):
+def evaluate(agent, grid_size, board_size, num_games, enemy_constructor=None, ui=False, interval=0.1):
     game = Game(update_interval=interval,
                 board_size=board_size, ui=ui, with_enemy=True)
-    if against_enemy:
-        enemy = Enemy(game.enemy)
+    if enemy_constructor:
+        enemy = enemy_constructor(game.enemy)
     else:
         enemy = agent
 
@@ -334,13 +353,13 @@ def evaluate(agent, grid_size, board_size, num_games, against_enemy, ui=False, i
         while not game.has_ended():
             state = game.state
 
-            grid_state = flatten(game.grid(grid_size))
+            grid_state = game.grid(grid_size)
             agent_action = agent(grid_state, game.player.direction)
 
-            if against_enemy:
+            if enemy_constructor:
                 enemy_action = enemy(state)
             else:
-                grid_state = flatten(game.grid(grid_size, center='enemy'))
+                grid_state = game.grid(grid_size, center='enemy')
                 enemy_action = agent(grid_state, game.enemy.direction)
 
             _, has_ended, result = game.step(
@@ -367,7 +386,7 @@ def evaluate_without_enemy(agent, grid_size, board_size, ui=False, interval=0.1)
             game.reset(player_init_pos=(i * BLOCK_SIZE, j * BLOCK_SIZE))
             reward = 0
             while not game.has_ended():
-                grid_state = flatten(game.grid(grid_size))
+                grid_state = game.grid(grid_size)
                 agent_action = agent(grid_state, game.player.direction)
 
                 _, has_ended, _ = game.step(agent_action, None, wait=ui)
