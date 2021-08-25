@@ -1,6 +1,6 @@
 import random
 
-from constants import BLOCK_SIZE
+from constants import ACTIONS, BLOCK_SIZE
 from helpers import as_indexes
 from structs import Direction
 
@@ -24,7 +24,7 @@ class Player:
             self.x = [random.randrange(x_min, x_max) * 30]
             self.y = [random.randrange(y_min, y_max) * 30]
 
-        self.direction = Direction.UP
+        self.direction = random.choice(ACTIONS)
 
     def move(self, action, first_move):
         if first_move:
