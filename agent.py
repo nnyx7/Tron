@@ -1,3 +1,4 @@
+from helpers import ROTATING_ACTIONS
 from structs import Direction
 import numpy as np
 import tensorflow as tf
@@ -5,9 +6,6 @@ import random
 
 
 class Agent:
-    __mapping = {Direction.UP: [0, 1, 2, 3], Direction.LEFT: [3, 2, 0, 1],
-                 Direction.DOWN: [1, 0, 3, 2], Direction.RIGHT: [2, 3, 1, 0]}
-
     def __init__(self, model, num_actions, min_epsilon, max_epsilon, epsilon_decay_rate):
         self.model = model()
         self.target_model = model()
@@ -26,7 +24,7 @@ class Agent:
     def __explore(self, direction):
         action = random.randrange(self.num_actions)
         if direction:
-            action = (action, Agent.__mapping[direction][action])
+            action = (action, ROTATING_ACTIONS[direction][action])
         return action
 
     def __exploit(self, state, direction):
@@ -37,7 +35,7 @@ class Agent:
         if direction:
             actions = tf.argsort(actions[0].numpy())
             if direction != Direction.UP:
-                actions = [(action.numpy(), Agent.__mapping[direction][action])
+                actions = [(action.numpy(), ROTATING_ACTIONS[direction][action])
                            for action in actions]
                 action = actions[self.num_actions - 1]
             else:
