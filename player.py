@@ -1,15 +1,16 @@
 import random
 
-from constants import ACTIONS, BLOCK_SIZE
 from helpers import as_indexes
 from structs import Direction
 
 
 class Player:
-    def __init__(self, x_index_limits, y_index_limits, board_size):
+    def __init__(self, x_index_limits, y_index_limits, board_size, actions, block_size):
         self.x_index_limits = x_index_limits
         self.y_index_limits = y_index_limits
         self.board_size = board_size
+        self.actions = actions
+        self.block_size = block_size
 
         self.reset()
 
@@ -24,7 +25,7 @@ class Player:
             self.x = [random.randrange(x_min, x_max) * 30]
             self.y = [random.randrange(y_min, y_max) * 30]
 
-        self.direction = random.choice(ACTIONS)
+        self.direction = random.choice(self.actions)
 
     def move(self, action, first_move):
         if first_move:
@@ -53,15 +54,15 @@ class Player:
 
         if self.direction == Direction.UP:
             self.x.append(last_x)
-            self.y.append(last_y - BLOCK_SIZE)
+            self.y.append(last_y - self.block_size)
         if self.direction == Direction.DOWN:
             self.x.append(last_x)
-            self.y.append(last_y + BLOCK_SIZE)
+            self.y.append(last_y + self.block_size)
         if self.direction == Direction.LEFT:
-            self.x.append(last_x - BLOCK_SIZE)
+            self.x.append(last_x - self.block_size)
             self.y.append(last_y)
         if self.direction == Direction.RIGHT:
-            self.x.append(last_x + BLOCK_SIZE)
+            self.x.append(last_x + self.block_size)
             self.y.append(last_y)
 
         self.length += 1
@@ -70,20 +71,20 @@ class Player:
         return (self.x[self.length - 1], self.y[self.length - 1])
 
     def head_indexes(self):
-        return as_indexes(self.head(), BLOCK_SIZE)
+        return as_indexes(self.head(), self.block_size)
 
     def prev_head(self):
         prev_index = self.length - 2
         return (self.x[prev_index], self.y[prev_index])
 
     def prev_head_indexes(self):
-        return as_indexes(self.prev_head(), BLOCK_SIZE)
+        return as_indexes(self.prev_head(), self.block_size)
 
     def collision_with_wall(self):
         (head_x, head_y) = self.head()
         (screen_x, screen_y) = self.board_size
         return (head_x < 0 or head_x > (
-            screen_x - BLOCK_SIZE) or head_y < 0 or head_y > (screen_y - BLOCK_SIZE))
+            screen_x - self.block_size) or head_y < 0 or head_y > (screen_y - self.block_size))
 
     def collision(self, enemy_positions):
         (head_x, head_y) = self.head()
