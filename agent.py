@@ -28,9 +28,8 @@ class Agent:
         return action
 
     def __exploit(self, state, direction):
-        state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        actions = self.model(state_tensor, training=False)
+        state = np.expand_dims(state, axis=0)
+        actions = self.model(state, training=False)
 
         if direction:
             actions = tf.argsort(actions[0].numpy())
