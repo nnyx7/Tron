@@ -217,7 +217,7 @@ class Game:
             if self.result == Result.UNKNOWN:
                 self.step(player_action, enemy(self.state), wait=True)
 
-    def run_agent(self, agent, grid_size=3):
+    def run_agent(self, agent, rotated, grid_size=3):
         running = True
         time.sleep(self.update_interval)
 
@@ -227,10 +227,11 @@ class Game:
 
             if self.result == Result.UNKNOWN:
                 grid_state = self.grid(grid_size)
-                agent_action = agent(grid_state, self.player.direction)
+                agent_action = agent(
+                    grid_state, self.player.direction, rotated)
                 self.step(agent_action, None, wait=True)
 
-    def run_agent_vs_enemy(self, agent, enemy, grid_size=3):
+    def run_agent_vs_enemy(self, agent, enemy, rotated, grid_size=3):
         if not self.with_enemy:
             raise("Enemy presence is not enabled")
 
@@ -243,7 +244,8 @@ class Game:
 
             if self.result == Result.UNKNOWN:
                 grid_state = self.grid(grid_size)
-                agent_action = agent(grid_state, self.player.direction)
+                agent_action = agent(
+                    grid_state, self.player.direction, rotated)
 
                 enemy_action = enemy(self.state)
                 self.step(agent_action, enemy_action, wait=True)
@@ -336,7 +338,7 @@ class Game:
         pygame.display.flip()
 
 
-def evaluate(agent, grid_size, board_size, num_games, enemy_constructor=None, ui=False, interval=0.1):
+def evaluate(agent, grid_size, board_size, num_games, rotated, enemy_constructor=None, ui=False, interval=0.1):
     game = Game(update_interval=interval,
                 board_size=board_size, ui=ui, with_enemy=True)
     if enemy_constructor:
@@ -354,13 +356,13 @@ def evaluate(agent, grid_size, board_size, num_games, enemy_constructor=None, ui
             state = game.state
 
             grid_state = game.grid(grid_size)
-            agent_action = agent(grid_state, game.player.direction)
+            agent_action = agent(grid_state, game.player.direction, rotated)
 
             if enemy_constructor:
                 enemy_action = enemy(state)
             else:
                 grid_state = game.grid(grid_size, center='enemy')
-                enemy_action = agent(grid_state, game.enemy.direction)
+                enemy_action = agent(grid_state, game.enemy.direction, rotated)
 
             _, has_ended, result = game.step(
                 agent_action, enemy_action, wait=ui)
@@ -376,7 +378,7 @@ def evaluate(agent, grid_size, board_size, num_games, enemy_constructor=None, ui
     return results
 
 
-def evaluate_without_enemy(agent, grid_size, board_size, ui=False, interval=0.1):
+def evaluate_without_enemy(agent, grid_size, board_size, rotated, ui=False, interval=0.1):
     game = Game(update_interval=interval, board_size=board_size, ui=ui)
 
     total_reward = 0
@@ -387,7 +389,8 @@ def evaluate_without_enemy(agent, grid_size, board_size, ui=False, interval=0.1)
             reward = 0
             while not game.has_ended():
                 grid_state = game.grid(grid_size)
-                agent_action = agent(grid_state, game.player.direction)
+                agent_action = agent(
+                    grid_state, game.player.direction, rotated)
 
                 _, has_ended, _ = game.step(agent_action, None, wait=ui)
 
