@@ -8,7 +8,7 @@ from constants import *
 from enemy import *
 from model_wrapper import ModelWrapper
 from player import Player
-from structs import Direction, Encodings, Result
+from structs import *
 
 
 PLAYER_KEYS = {K_UP: Direction.UP, K_DOWN: Direction.DOWN,
@@ -21,9 +21,10 @@ ENEMY_KEYS = {K_w: Direction.UP, K_s: Direction.DOWN,
 class Game:
     actions = ACTIONS
 
-    def __init__(self, update_interval=INTERVAL, board_size=BOARD_SIZE,
+    def __init__(self, encodings, update_interval=INTERVAL, board_size=BOARD_SIZE,
                  player_keys=PLAYER_KEYS, enemy_keys=ENEMY_KEYS,  ui=True, with_enemy=False):
 
+        self.encodings = encodings
         self.update_interval = update_interval
         self.board_size = board_size
         self.player_keys = player_keys
@@ -39,7 +40,7 @@ class Game:
         for i in range(max_x_index):
             self.state.append([])
             for j in range(max_y_index):
-                self.state[i].append(Encodings.EMPTY.value)
+                self.state[i].append(self.encodings.EMPTY.value)
 
         if self.with_enemy:
             # Random on the upper half of the board
@@ -68,18 +69,18 @@ class Game:
         (size_x, size_y) = self.screen_size
         for i in range(size_x // BLOCK_SIZE):
             for j in range(size_y // BLOCK_SIZE):
-                self.state[i][j] = Encodings.EMPTY.value
+                self.state[i][j] = self.encodings.EMPTY.value
 
         self.player.reset(init_pos=player_init_pos)
         (player_x, player_y) = self.player.head_indexes()
-        self.state[player_x][player_y] = Encodings.PLAYER_HEAD.value
+        self.state[player_x][player_y] = self.encodings.PLAYER_HEAD.value
 
         if self.with_enemy:
             self.enemy.reset(init_pos=enemy_init_pos)
             while (self.enemy.x == self.player.x and self.enemy.y == self.player.y):
                 self.enemy.reset()
             (enemy_x, enemy_y) = self.enemy.head_indexes()
-            self.state[enemy_x][enemy_y] = Encodings.ENEMY_HEAD.value
+            self.state[enemy_x][enemy_y] = self.encodings.ENEMY_HEAD.value
 
         if (self.ui):
             self.surface.fill(BACKGROUND_COLOR)
@@ -130,7 +131,7 @@ class Game:
         for i in range(side_size):
             grid_state.append([])
             for j in range(side_size):
-                grid_state[i].append(Encodings.EMPTY.value)
+                grid_state[i].append(self.encodings.EMPTY.value)
 
         (board_x, board_y) = self.board_size
         offset = int(-(side_size - 1) // 2)
@@ -150,7 +151,7 @@ class Game:
             for j in range(side_size):
                 actual_y = y + offset_y
                 if (actual_x < 0 or actual_x >= board_x or actual_y < 0 or actual_y >= board_y):
-                    grid_state[i][j] = Encodings.HIT.value
+                    grid_state[i][j] = self.encodings.HIT.value
                 else:
                     grid_state[i][j] = self.state[actual_x][actual_y]
                 offset_y += 1
@@ -282,20 +283,23 @@ class Game:
     def __update_state(self):
         # Player
         (prev_x, prev_y) = self.player.prev_head_indexes()
-        self.state[prev_x][prev_y] = Encodings.HIT.value
 
-        if not self.player.collision_with_wall():
+        if self.player.collision_with_wall():
+            self.state[prev_x][prev_y] = self.encodings.HIT.value
+        else:
+            self.state[prev_x][prev_y] = self.encodings.PLAYER_BODY.value
             (x, y) = self.player.head_indexes()
-            self.state[x][y] = Encodings.PLAYER_HEAD.value
+            self.state[x][y] = self.encodings.PLAYER_HEAD.value
 
         if self.with_enemy:
             # Enemy
             (prev_x, prev_y) = self.enemy.prev_head_indexes()
-            self.state[prev_x][prev_y] = Encodings.HIT.value
-
-            if not self.enemy.collision_with_wall():
+            if self.enemy.collision_with_wall():
+                self.state[prev_x][prev_y] = self.encodings.HIT.value
+            else:
+                self.state[prev_x][prev_y] = self.encodings.ENEMY_BODY.value
                 (x, y) = self.enemy.head_indexes()
-                self.state[x][y] = Encodings.ENEMY_HEAD.value
+                self.state[x][y] = self.encodings.ENEMY_HEAD.value
 
     def __update_result(self):
         if self.with_enemy:
@@ -403,10 +407,10 @@ def evaluate_without_enemy(agent, grid_size, board_size, rotated, ui=False, inte
 
 
 if __name__ == "__main__":
-    game = Game(with_enemy=True)
+    game = Game(Encodings3, with_enemy=True)
 
-    enemy = Enemy(game.enemy)
-    model = tf.keras.models.load_model('model_last.h5', compile=False)
+    enemy = SmarterEnemy(game.enemy, Encodings3)
+    model = tf.keras.models.load_model('model.h5', compile=False)
     agent = ModelWrapper(model)
 
-    game.run_agent_vs_enemy(agent, enemy)
+    game.run_agent_vs_enemy(agent, enemy, False, grid_size=5)
